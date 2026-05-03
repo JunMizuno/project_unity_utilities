@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using R3;
 
 public class GameControl : MonoBehaviour
 {
@@ -11,8 +12,6 @@ public class GameControl : MonoBehaviour
 
     private static GameControl instance;
     private static readonly string CLASS_NAME = "GameControlScene";
-
-    private float deltaTime = default;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     public static void FirstLoad()
@@ -44,11 +43,13 @@ public class GameControl : MonoBehaviour
         // @memo.mizuno ここで最初に起動するシーンを指定する。
         // @memo.mizuno LoadSceneMode.Additiveだとシーンが重複して生成されてしまう。(対象のシーンがDontDestroyOnLoadを含んでいる場合に限る。)
         SceneManager.LoadSceneAsync((int)SceneControl.SCENE_NUM.Test, LoadSceneMode.Single);
+
+        SetCalcFPS();
     }
 
     public void Update()
     {
-        CalcFPS();
+
     }
 
     public void FixedUpdate()
@@ -76,10 +77,14 @@ public class GameControl : MonoBehaviour
 
     }
 
-    private void CalcFPS()
+    private void SetCalcFPS()
     {
-        deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f;
-        float fps = 1.0f / deltaTime;
-        fpsText.text = $"FPS:{fps:0.}";
+        Observable.EveryUpdate()
+            .Select(_ => 1f / Time.unscaledDeltaTime)
+            .Subscribe(fps =>
+            {
+                fpsText.text = $"FPS:{fps:0.}";
+            })
+            .AddTo(this);
     }
 }
