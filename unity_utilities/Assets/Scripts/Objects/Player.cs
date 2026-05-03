@@ -23,10 +23,12 @@ public class Player : MonoBehaviour
             .Subscribe(_ =>
             {
                 this.gameObject.transform.localPosition = new Vector3(0.0f, 2.0f, -8.0f);
+                this.gameObject.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
                 rigidBoby.linearVelocity = Vector3.zero;
                 rigidBoby.angularVelocity = Vector3.zero;
                 rigidBoby.useGravity = true;
-                rigidBoby.AddForce(Vector3.forward * 12.0f, ForceMode.Impulse);
+                rigidBoby.mass = 1.0f;
+                rigidBoby.AddForce(Vector3.forward * 20.0f, ForceMode.Impulse);
             })
             .AddTo(this);
     }
