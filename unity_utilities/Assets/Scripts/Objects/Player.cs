@@ -7,7 +7,8 @@ public class Player : MonoBehaviour
 
     void Start()
     {
-        rigidBoby.AddForce(Vector3.forward * 5.0f, ForceMode.Impulse);
+        rigidBoby.useGravity = true;
+        rigidBoby.AddForce(Vector3.forward * 8.0f, ForceMode.Impulse);
     }
 
     void Update()
