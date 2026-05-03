@@ -2,11 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GameControl : MonoBehaviour
 {
+    [SerializeField]
+    private TextMeshProUGUI fpsText;
+
     private static GameControl instance;
     private static readonly string CLASS_NAME = "GameControlScene";
+
+    private float deltaTime = default;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     public static void FirstLoad()
@@ -42,7 +48,7 @@ public class GameControl : MonoBehaviour
 
     public void Update()
     {
-
+        CalcFPS();
     }
 
     public void FixedUpdate()
@@ -68,5 +74,12 @@ public class GameControl : MonoBehaviour
     public void OnApplicationQuit()
     {
 
+    }
+
+    private void CalcFPS()
+    {
+        deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f;
+        float fps = 1.0f / deltaTime;
+        fpsText.text = $"FPS:{fps:0.}";
     }
 }
