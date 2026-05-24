@@ -60,8 +60,8 @@ public class CreateTargets : MonoBehaviour
                     }
                     instance.transform.localPosition = new Vector3(xPos, yPos, zPos);
 
-                    var rigitBody = instance.GetComponent<Rigidbody>();
-                    if (rigitBody != null)
+                    var rigidBody = instance.GetComponent<Rigidbody>();
+                    if (rigidBody != null)
                     {
                         // change Kinematics
                     }

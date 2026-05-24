@@ -153,4 +153,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d04ff01e7fbbf054a81cf75b5fb93f66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Target
-  rigidBoby: {fileID: 4362341329123271359}
+  rigidBody: {fileID: 4362341329123271359}

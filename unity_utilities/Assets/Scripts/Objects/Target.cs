@@ -3,7 +3,7 @@ using UnityEngine;
 public class Target : MonoBehaviour
 {
     [SerializeField]
-    private Rigidbody rigidBoby;
+    private Rigidbody rigidBody;
 
     void Start()
     {

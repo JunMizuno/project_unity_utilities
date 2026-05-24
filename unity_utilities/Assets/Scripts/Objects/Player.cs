@@ -5,7 +5,7 @@ using R3;
 public class Player : MonoBehaviour
 {
     [SerializeField]
-    private Rigidbody rigidBoby;
+    private Rigidbody rigidBody;
 
     void Start()
     {
@@ -24,11 +24,11 @@ public class Player : MonoBehaviour
             {
                 this.gameObject.transform.localPosition = new Vector3(0.0f, 2.0f, -8.0f);
                 this.gameObject.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
-                rigidBoby.linearVelocity = Vector3.zero;
-                rigidBoby.angularVelocity = Vector3.zero;
-                rigidBoby.useGravity = true;
-                rigidBoby.mass = 1.0f;
-                rigidBoby.AddForce(Vector3.forward * 20.0f, ForceMode.Impulse);
+                rigidBody.linearVelocity = Vector3.zero;
+                rigidBody.angularVelocity = Vector3.zero;
+                rigidBody.useGravity = true;
+                rigidBody.mass = 1.0f;
+                rigidBody.AddForce(Vector3.forward * 20.0f, ForceMode.Impulse);
             })
             .AddTo(this);
     }
