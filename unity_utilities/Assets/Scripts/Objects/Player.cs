@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using R3;
 
@@ -7,16 +7,28 @@ public class Player : MonoBehaviour
     [SerializeField]
     private Rigidbody rigidBody;
 
+    /// <summary>
+    /// Starts the periodic launch behavior for the player ball.
+    /// プレイヤーボールを定期的に発射する処理を開始します。
+    /// </summary>
     void Start()
     {
         AddForceToPlayer();
     }
 
+    /// <summary>
+    /// Runs per-frame player processing.
+    /// プレイヤーのフレームごとの処理を実行します。
+    /// </summary>
     void Update()
     {
-        
+
     }
 
+    /// <summary>
+    /// Resets the player ball and applies forward impulse at fixed intervals by using R3.
+    /// R3を使用して、一定間隔でプレイヤーボールをリセットし、前方への力を加えます。
+    /// </summary>
     private void AddForceToPlayer()
     {
         Observable.Timer(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(6))

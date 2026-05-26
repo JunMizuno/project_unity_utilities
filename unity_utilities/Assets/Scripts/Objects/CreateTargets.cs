@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using R3;
 
@@ -9,6 +9,10 @@ public class CreateTargets : MonoBehaviour
 
     private bool trigger = default;
 
+    /// <summary>
+    /// Starts the periodic target generation behavior.
+    /// ターゲットを定期的に生成する処理を開始します。
+    /// </summary>
     void Start()
     {
         Observable.Timer(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(6))
@@ -20,11 +24,19 @@ public class CreateTargets : MonoBehaviour
             .AddTo(this);
     }
 
+    /// <summary>
+    /// Runs per-frame target generator processing.
+    /// ターゲット生成オブジェクトのフレームごとの処理を実行します。
+    /// </summary>
     void Update()
     {
-        
+
     }
 
+    /// <summary>
+    /// Recreates the target objects in either a depth layout or a flat layout.
+    /// ターゲットオブジェクトを奥行きのある配置または平面配置で再生成します。
+    /// </summary>
     private void CreateTargetObjects()
     {
         foreach (Transform child in this.gameObject.transform)
@@ -63,7 +75,8 @@ public class CreateTargets : MonoBehaviour
                     var rigidBody = instance.GetComponent<Rigidbody>();
                     if (rigidBody != null)
                     {
-                        // change Kinematics
+                        // Change the target physics settings after instantiation.
+                        // 生成後にターゲットの物理設定を変更します。
                     }
                 }
             }

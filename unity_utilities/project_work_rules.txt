@@ -1,45 +1,37 @@
-Project Poker Work Rules
+﻿Project Poker Work Rules
 Project Poker 作業ルール
 
 1. Development branch
 1. 開発ブランチ
-
 Use the develop branch for day-to-day development work.
 日々の開発作業は develop ブランチで行います。
-
 Keep main as the stable baseline branch unless explicitly instructed otherwise.
 明示的な指示がない限り、main は安定版の基準ブランチとして扱います。
 
 2. GitHub repository
 2. GitHub リポジトリ
-
 Use the GitHub repository at https://github.com/JunMizuno/project_poker.git for this project.
 このプロジェクトでは https://github.com/JunMizuno/project_poker.git の GitHub リポジトリを使用します。
-
 Push development work to origin/develop unless another destination is explicitly requested.
 別の送信先を明示されない限り、開発作業は origin/develop に push します。
+For this Unity utilities project, commit and push to the current working branch unless another destination is explicitly requested.
+この Unity utilities プロジェクトでは、別の送信先を明示されない限り、現在の作業ブランチにコミットして push します。
 
 3. Commit and push policy
 3. コミットと push の方針
-
 When a task changes project files, commit and push the completed work unless the user says not to.
 タスクでプロジェクトファイルを変更した場合、ユーザーが止めない限り完了後にコミットと push を行います。
-
 If the user says not to commit or not to push, stop at the requested point.
 ユーザーがコミットしない、または push しないよう指示した場合は、指定された段階で止めます。
-
 Before committing, check the git status and make sure unrelated generated files are not included.
 コミット前には git status を確認し、無関係な生成ファイルが含まれていないことを確認します。
 
 4. Code comment style
 4. コードコメントの書き方
-
 When adding comments in code, write the English comment first.
 コードにコメントを追加する場合、まず英語コメントを書きます。
-
 Write the Japanese comment with the same meaning on the line directly below the English comment.
 英語コメントの直下の行に、同じ意味の日本語コメントを書きます。
-
 Example:
 例:
 
@@ -48,45 +40,34 @@ Example:
 
 5. Documentation style
 5. ドキュメントの書き方
-
 When bilingual documentation is requested, place the Japanese sentence directly below the matching English sentence.
 二言語ドキュメントを依頼された場合は、対応する英語文の直下に日本語文を置きます。
-
 Keep documents practical and useful for future implementation work.
 ドキュメントは今後の実装作業で参照しやすい実用的な内容にします。
 
 6. Unity project baseline
 6. Unity プロジェクトの基準
-
 The project targets Unity 6000.3.10f1.
 このプロジェクトは Unity 6000.3.10f1 を対象にします。
-
 The project is a 3D Unity project because visual effects and presentation may use 3D expression.
 演出やエフェクトを3Dで表現する可能性があるため、このプロジェクトは3D Unity プロジェクトとして扱います。
-
 Use UniTask and R3 as expected programming libraries for asynchronous and reactive code.
 非同期処理とリアクティブ処理のために、UniTask と R3 を使用する前提で進めます。
-
 Update packages when needed to keep the project free of startup or compile errors.
 起動エラーやコンパイルエラーをなくすために必要な場合は、パッケージを更新します。
 
 7. Unity generated files
 7. Unity 生成ファイル
-
 Do not commit Unity generated cache folders such as Library, Temp, Obj, Logs, or UserSettings.
 Library、Temp、Obj、Logs、UserSettings などの Unity 生成キャッシュフォルダはコミットしません。
-
 Do not commit generated solution or project files such as .sln or .csproj unless explicitly requested.
 明示的に依頼されない限り、.sln や .csproj などの生成されたソリューション/プロジェクトファイルはコミットしません。
 
 8. Token and context awareness
 8. トークンとコンテキストへの配慮
-
 The assistant cannot see exact Free plan limits or remaining token counts.
 アシスタントは Free プランの正確な上限や残りトークン数を見ることはできません。
-
 If the conversation or task becomes large, the assistant should warn the user that it may be a good time to pause or split the work.
 会話や作業が大きくなってきた場合、アシスタントは一度区切る、または作業を分割するのがよさそうだとユーザーに知らせます。
-
 This warning is based on work size and context length, not on exact account usage numbers.
 この通知は作業量や会話の長さに基づくもので、正確なアカウント使用量に基づくものではありません。

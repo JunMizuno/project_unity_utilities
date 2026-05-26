@@ -1,18 +1,22 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class SceneBase : MonoBehaviour
 {
-    // Start is called before the first frame update
+    /// <summary>
+    /// Initializes the scene behavior before the first frame update.
+    /// 最初のフレーム更新前にシーン処理を初期化します。
+    /// </summary>
     void Start()
     {
-        
+
     }
 
-    // Update is called once per frame
+    /// <summary>
+    /// Runs per-frame scene processing.
+    /// シーンのフレームごとの処理を実行します。
+    /// </summary>
     void Update()
     {
-        
+
     }
 }
