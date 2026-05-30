@@ -43,6 +43,8 @@ public static class WaveSceneSetup
 
         MeshRenderer meshRenderer = wavePlane.AddComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = material;
+        meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        meshRenderer.receiveShadows = false;
 
         PositionCamera();
 
@@ -69,11 +71,6 @@ public static class WaveSceneSetup
 
     private static void EnsureWaterTexture()
     {
-        if (File.Exists(TexturePath))
-        {
-            return;
-        }
-
         const int size = 256;
         Texture2D texture = new(size, size, TextureFormat.RGBA32, false);
 
@@ -83,11 +80,11 @@ public static class WaveSceneSetup
             {
                 float u = x / (float)size;
                 float v = y / (float)size;
-                float rippleA = Mathf.Sin((u * 18f + v * 7f) * Mathf.PI * 2f);
-                float rippleB = Mathf.Sin((u * -9f + v * 15f) * Mathf.PI * 2f);
-                float noise = Mathf.PerlinNoise(u * 9.5f, v * 9.5f);
-                float value = Mathf.Clamp01(0.52f + rippleA * 0.12f + rippleB * 0.08f + (noise - 0.5f) * 0.35f);
-                texture.SetPixel(x, y, new Color(value * 0.55f, value * 0.85f, value, 1f));
+                float rippleA = Mathf.Sin((u * 4.0f + v * 1.7f) * Mathf.PI * 2f);
+                float rippleB = Mathf.Sin((u * -2.2f + v * 3.6f) * Mathf.PI * 2f);
+                float noise = Mathf.PerlinNoise(u * 3.2f, v * 3.2f);
+                float value = Mathf.Clamp01(0.58f + rippleA * 0.035f + rippleB * 0.025f + (noise - 0.5f) * 0.08f);
+                texture.SetPixel(x, y, new Color(value * 0.72f, value * 0.9f, value, 1f));
             }
         }
 
@@ -95,6 +92,12 @@ public static class WaveSceneSetup
         File.WriteAllBytes(TexturePath, texture.EncodeToPNG());
         Object.DestroyImmediate(texture);
         AssetDatabase.ImportAsset(TexturePath);
+
+        TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(TexturePath);
+        importer.filterMode = FilterMode.Bilinear;
+        importer.mipmapEnabled = true;
+        importer.wrapMode = TextureWrapMode.Repeat;
+        importer.SaveAndReimport();
     }
 
     private static Mesh EnsureWaveMesh()
@@ -173,15 +176,15 @@ public static class WaveSceneSetup
 
         material.shader = shader;
         material.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(TexturePath));
-        material.SetColor("_DeepColor", new Color(0.015f, 0.18f, 0.28f, 1f));
-        material.SetColor("_ShallowColor", new Color(0.12f, 0.64f, 0.78f, 1f));
-        material.SetColor("_FoamColor", new Color(0.85f, 0.98f, 1f, 1f));
-        material.SetFloat("_Amplitude", 0.32f);
-        material.SetFloat("_WaveSpeed", 2.35f);
-        material.SetFloat("_WaveScale", 1.75f);
-        material.SetFloat("_FoamThreshold", 0.76f);
-        material.SetFloat("_TextureStrength", 0.32f);
-        material.SetFloat("_GlossHighlight", 0.85f);
+        material.SetColor("_DeepColor", new Color(0.02f, 0.26f, 0.36f, 1f));
+        material.SetColor("_ShallowColor", new Color(0.16f, 0.58f, 0.70f, 1f));
+        material.SetColor("_FoamColor", new Color(0.82f, 0.95f, 0.96f, 1f));
+        material.SetFloat("_Amplitude", 0.13f);
+        material.SetFloat("_WaveSpeed", 1.35f);
+        material.SetFloat("_WaveScale", 0.9f);
+        material.SetFloat("_FoamThreshold", 0.94f);
+        material.SetFloat("_TextureStrength", 0.08f);
+        material.SetFloat("_GlossHighlight", 0.32f);
         EditorUtility.SetDirty(material);
         AssetDatabase.SaveAssets();
         return material;

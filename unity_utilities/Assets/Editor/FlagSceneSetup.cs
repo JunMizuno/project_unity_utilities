@@ -33,18 +33,18 @@ public static class FlagSceneSetup
 
         GameObject flagRoot = new("Flag");
         flagRoot.transform.SetParent(objectsRoot.transform, false);
-        flagRoot.transform.localPosition = new Vector3(-3.4f, 1.8f, 0f);
+        flagRoot.transform.localPosition = new Vector3(-2.35f, 0.55f, 0f);
 
         GameObject pole = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         pole.name = "Flag Pole";
         pole.transform.SetParent(flagRoot.transform, false);
-        pole.transform.localPosition = new Vector3(0f, 0f, 0.02f);
-        pole.transform.localScale = new Vector3(0.08f, 1.8f, 0.08f);
+        pole.transform.localPosition = new Vector3(0f, 1.25f, 0.02f);
+        pole.transform.localScale = new Vector3(0.075f, 1.55f, 0.075f);
         pole.GetComponent<MeshRenderer>().sharedMaterial = poleMaterial;
 
         GameObject cloth = new("Flag Cloth");
         cloth.transform.SetParent(flagRoot.transform, false);
-        cloth.transform.localPosition = new Vector3(0f, 1.25f, 0f);
+        cloth.transform.localPosition = new Vector3(0f, 2.02f, 0f);
         cloth.transform.localRotation = Quaternion.identity;
 
         MeshFilter meshFilter = cloth.AddComponent<MeshFilter>();
@@ -192,10 +192,10 @@ public static class FlagSceneSetup
         material.shader = shader;
         material.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(TexturePath));
         material.SetColor("_BaseColor", Color.white);
-        material.SetFloat("_WaveAmplitude", 0.42f);
-        material.SetFloat("_WaveSpeed", 3.2f);
-        material.SetFloat("_WaveScale", 2.4f);
-        material.SetFloat("_VerticalFlutter", 0.11f);
+        material.SetFloat("_WaveAmplitude", 0.28f);
+        material.SetFloat("_WaveSpeed", 2.4f);
+        material.SetFloat("_WaveScale", 1.45f);
+        material.SetFloat("_VerticalFlutter", 0.06f);
         material.SetFloat("_HoistStiffness", 1.7f);
         material.SetFloat("_LightBoost", 0.65f);
         EditorUtility.SetDirty(material);
@@ -231,9 +231,9 @@ public static class FlagSceneSetup
         }
 
         camera.transform.SetPositionAndRotation(
-            new Vector3(0.8f, 3.6f, -7.4f),
-            Quaternion.Euler(24f, -6f, 0f));
-        camera.fieldOfView = 58f;
+            new Vector3(0.55f, 2.9f, -8.4f),
+            Quaternion.Euler(12f, -2f, 0f));
+        camera.fieldOfView = 46f;
         camera.backgroundColor = new Color(0.05f, 0.12f, 0.18f, 1f);
     }
 }

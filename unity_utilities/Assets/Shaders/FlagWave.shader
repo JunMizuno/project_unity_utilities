@@ -25,6 +25,7 @@ Shader "ShaderUtilities/FlagWave"
         {
             Name "Forward"
             Tags { "LightMode" = "UniversalForward" }
+            Cull Off
 
             HLSLPROGRAM
             #pragma vertex vert

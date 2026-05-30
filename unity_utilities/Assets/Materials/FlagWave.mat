@@ -31,10 +31,10 @@ Material:
     m_Floats:
     - _HoistStiffness: 1.7
     - _LightBoost: 0.65
-    - _VerticalFlutter: 0.11
-    - _WaveAmplitude: 0.42
-    - _WaveScale: 2.4
-    - _WaveSpeed: 3.2
+    - _VerticalFlutter: 0.06
+    - _WaveAmplitude: 0.28
+    - _WaveScale: 1.45
+    - _WaveSpeed: 2.4
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

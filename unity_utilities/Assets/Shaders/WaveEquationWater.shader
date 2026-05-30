@@ -6,11 +6,11 @@ Shader "ShaderUtilities/WaveEquationWater"
         _DeepColor ("Deep Color", Color) = (0.02, 0.22, 0.34, 1)
         _ShallowColor ("Shallow Color", Color) = (0.20, 0.72, 0.86, 1)
         _FoamColor ("Foam Color", Color) = (0.85, 0.98, 1.0, 1)
-        _Amplitude ("Amplitude", Range(0, 1)) = 0.28
+        _Amplitude ("Amplitude", Range(0, 1)) = 0.14
         _WaveSpeed ("Wave Speed", Range(0, 6)) = 2.4
-        _WaveScale ("Wave Scale", Range(0.1, 8)) = 2.2
-        _FoamThreshold ("Foam Threshold", Range(0, 1)) = 0.74
-        _TextureStrength ("Texture Strength", Range(0, 1)) = 0.28
+        _WaveScale ("Wave Scale", Range(0.1, 8)) = 0.8
+        _FoamThreshold ("Foam Threshold", Range(0, 1)) = 0.92
+        _TextureStrength ("Texture Strength", Range(0, 1)) = 0.08
         _GlossHighlight ("Gloss Highlight", Range(0, 2)) = 0.7
     }
 
@@ -82,9 +82,9 @@ Shader "ShaderUtilities/WaveEquationWater"
                 // Each sine component satisfies u_tt = c^2 * Laplacian(u);
                 // the sum remains a traveling-wave solution for the same wave speed.
                 half h = 0;
-                h += EvaluateWave(position, float2(1.0, 0.18), 1.15h * scale, 0.55h, _WaveSpeed, 0.0h);
-                h += EvaluateWave(position, float2(-0.35, 1.0), 1.85h * scale, 0.30h, _WaveSpeed, 1.7h);
-                h += EvaluateWave(position, float2(0.72, 0.58), 2.55h * scale, 0.15h, _WaveSpeed, 3.1h);
+                h += EvaluateWave(position, float2(1.0, 0.20), 0.78h * scale, 0.58h, _WaveSpeed, 0.0h);
+                h += EvaluateWave(position, float2(-0.25, 1.0), 1.08h * scale, 0.28h, _WaveSpeed, 1.7h);
+                h += EvaluateWave(position, float2(0.72, 0.58), 1.42h * scale, 0.14h, _WaveSpeed, 3.1h);
                 return h * _Amplitude;
             }
 
@@ -119,16 +119,17 @@ Shader "ShaderUtilities/WaveEquationWater"
                 Light mainLight = GetMainLight();
                 half ndotl = saturate(dot(normalWS, mainLight.direction));
 
-                half4 textureSample = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv + _Time.yy * half2(0.015h, 0.01h));
-                half3 waterColor = lerp(_DeepColor.rgb, _ShallowColor.rgb, input.waveHeight);
-                waterColor = lerp(waterColor, waterColor * textureSample.rgb, _TextureStrength);
-                waterColor = lerp(waterColor, _FoamColor.rgb, input.foam);
+                half4 textureSample = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv * 0.45h + _Time.yy * half2(0.006h, 0.004h));
+                half softHeight = smoothstep(0.15h, 0.95h, input.waveHeight);
+                half3 waterColor = lerp(_DeepColor.rgb, _ShallowColor.rgb, softHeight);
+                waterColor = lerp(waterColor, waterColor * lerp(0.82h, 1.08h, textureSample.b), _TextureStrength);
+                waterColor = lerp(waterColor, _FoamColor.rgb, input.foam * 0.18h);
 
                 half fresnel = pow(1.0h - saturate(dot(normalWS, normalize(GetWorldSpaceViewDir(input.positionWS)))), 4.0h);
-                half highlight = pow(saturate(dot(normalWS, normalize(mainLight.direction + normalize(GetWorldSpaceViewDir(input.positionWS))))), 48.0h);
+                half highlight = pow(saturate(dot(normalWS, normalize(mainLight.direction + normalize(GetWorldSpaceViewDir(input.positionWS))))), 96.0h);
 
-                half3 lit = waterColor * (0.42h + ndotl * 0.68h);
-                lit += _FoamColor.rgb * (fresnel * 0.22h + highlight * _GlossHighlight);
+                half3 lit = waterColor * (0.48h + ndotl * 0.54h);
+                lit += _FoamColor.rgb * (fresnel * 0.12h + highlight * _GlossHighlight);
                 return half4(lit, 1);
             }
             ENDHLSL
