@@ -15,6 +15,13 @@ public class CreateTargets : MonoBehaviour
     /// </summary>
     void Start()
     {
+        Player.LaunchedSubject
+            .Subscribe(_ =>
+            {
+                SetTargetPhysicsEnabled(true);
+            })
+            .AddTo(this);
+
         Observable.Timer(TimeSpan.FromSeconds(1))
             .Subscribe(_ =>
             {
@@ -72,13 +79,28 @@ public class CreateTargets : MonoBehaviour
                     }
                     instance.transform.localPosition = new Vector3(xPos, yPos, zPos);
 
-                    var rigidBody = instance.GetComponent<Rigidbody>();
-                    if (rigidBody != null)
+                    var target = instance.GetComponent<Target>();
+                    if (target != null)
                     {
-                        // Change the target physics settings after instantiation.
-                        // 生成後にターゲットの物理設定を変更します。
+                        target.SetPhysicsEnabled(false);
                     }
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sets whether all generated targets are controlled by physics.
+    /// 生成済みのすべてのターゲットを物理演算で制御するかどうかを設定します。
+    /// </summary>
+    private void SetTargetPhysicsEnabled(bool enabled)
+    {
+        foreach (Transform child in this.gameObject.transform)
+        {
+            var target = child.GetComponent<Target>();
+            if (target != null)
+            {
+                target.SetPhysicsEnabled(enabled);
             }
         }
     }

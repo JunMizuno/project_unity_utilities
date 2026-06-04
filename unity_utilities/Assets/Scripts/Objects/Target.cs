@@ -6,12 +6,33 @@ public class Target : MonoBehaviour
     private Rigidbody rigidBody;
 
     /// <summary>
-    /// Initializes the target object.
-    /// ターゲットオブジェクトを初期化します。
+    /// Initializes the target rigidbody reference.
+    /// ターゲットのRigidbody参照を初期化します。
     /// </summary>
-    void Start()
+    void Awake()
     {
+        if (rigidBody == null)
+        {
+            rigidBody = GetComponent<Rigidbody>();
+        }
+    }
 
+    /// <summary>
+    /// Sets whether this target is controlled by physics.
+    /// このターゲットを物理演算で制御するかどうかを設定します。
+    /// </summary>
+    public void SetPhysicsEnabled(bool enabled)
+    {
+        if (rigidBody == null)
+        {
+            return;
+        }
+
+        rigidBody.isKinematic = !enabled;
+        if (enabled)
+        {
+            rigidBody.WakeUp();
+        }
     }
 
     /// <summary>

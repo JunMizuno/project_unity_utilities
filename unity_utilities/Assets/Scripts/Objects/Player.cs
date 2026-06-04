@@ -1,7 +1,10 @@
 ﻿using UnityEngine;
+using R3;
 
 public class Player : MonoBehaviour
 {
+    public static readonly Subject<Player> LaunchedSubject = new Subject<Player>();
+
     [SerializeField]
     private Rigidbody rigidBody;
 
@@ -17,6 +20,7 @@ public class Player : MonoBehaviour
         rigidBody.angularVelocity = Vector3.zero;
         rigidBody.useGravity = true;
         rigidBody.mass = 1.0f;
+        LaunchedSubject.OnNext(this);
         rigidBody.AddForce(Vector3.forward * 20.0f, ForceMode.Impulse);
     }
 }
