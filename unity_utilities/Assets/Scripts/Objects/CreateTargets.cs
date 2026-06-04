@@ -10,15 +10,15 @@ public class CreateTargets : MonoBehaviour
     private bool trigger = default;
 
     /// <summary>
-    /// Starts the periodic target generation behavior.
-    /// ターゲットを定期的に生成する処理を開始します。
+    /// Starts the initial target generation behavior.
+    /// ターゲットを最初に一度だけ生成する処理を開始します。
     /// </summary>
     void Start()
     {
-        Observable.Timer(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(6))
+        Observable.Timer(TimeSpan.FromSeconds(1))
             .Subscribe(_ =>
             {
-                trigger = !trigger;
+                trigger = true;
                 CreateTargetObjects();
             })
             .AddTo(this);
