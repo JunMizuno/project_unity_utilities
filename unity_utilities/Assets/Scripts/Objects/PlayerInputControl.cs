@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 using R3;
 
 [RequireComponent(typeof(Player))]
@@ -31,14 +32,6 @@ public class PlayerInputControl : MonoBehaviour
 
     private InputAction launchAction;
 
-    private InputAction upAction;
-
-    private InputAction downAction;
-
-    private InputAction leftAction;
-
-    private InputAction rightAction;
-
     private float verticalAngle;
 
     private float horizontalAngle;
@@ -65,10 +58,6 @@ public class PlayerInputControl : MonoBehaviour
         }
 
         launchAction = new InputAction("Launch", InputActionType.Button, "<Keyboard>/space");
-        upAction = new InputAction("LaunchAngleUp", InputActionType.Button, "<Keyboard>/upArrow");
-        downAction = new InputAction("LaunchAngleDown", InputActionType.Button, "<Keyboard>/downArrow");
-        leftAction = new InputAction("LaunchAngleLeft", InputActionType.Button, "<Keyboard>/leftArrow");
-        rightAction = new InputAction("LaunchAngleRight", InputActionType.Button, "<Keyboard>/rightArrow");
     }
 
     /// <summary>
@@ -78,20 +67,18 @@ public class PlayerInputControl : MonoBehaviour
     void OnEnable()
     {
         launchAction?.Enable();
-        upAction?.Enable();
-        downAction?.Enable();
-        leftAction?.Enable();
-        rightAction?.Enable();
     }
 
     /// <summary>
-    /// Starts observing the launch input by using R3.
-    /// R3を使用して、発射入力の監視を開始します。
+    /// Starts observing the launch and angle input by using R3.
+    /// R3を使用して、発射入力と角度入力の監視を開始します。
     /// </summary>
     void Start()
     {
         SetLaunchInput();
         SetAngleInput();
+        launchDirectionIndicator?.SetAngles(verticalAngle, horizontalAngle);
+        launchDirectionIndicator?.SetAngleText(verticalAngle, horizontalAngle);
     }
 
     /// <summary>
@@ -101,10 +88,6 @@ public class PlayerInputControl : MonoBehaviour
     void OnDisable()
     {
         launchAction?.Disable();
-        upAction?.Disable();
-        downAction?.Disable();
-        leftAction?.Disable();
-        rightAction?.Disable();
     }
 
     /// <summary>
@@ -114,10 +97,6 @@ public class PlayerInputControl : MonoBehaviour
     void OnDestroy()
     {
         launchAction?.Dispose();
-        upAction?.Dispose();
-        downAction?.Dispose();
-        leftAction?.Dispose();
-        rightAction?.Dispose();
     }
 
     /// <summary>
@@ -145,8 +124,14 @@ public class PlayerInputControl : MonoBehaviour
         Observable.EveryUpdate()
             .Subscribe(_ =>
             {
-                var verticalInput = GetPressedValue(upAction) - GetPressedValue(downAction);
-                var horizontalInput = GetPressedValue(rightAction) - GetPressedValue(leftAction);
+                var keyboard = Keyboard.current;
+                if (keyboard == null)
+                {
+                    return;
+                }
+
+                var verticalInput = GetPressedValue(keyboard.upArrowKey) - GetPressedValue(keyboard.downArrowKey);
+                var horizontalInput = GetPressedValue(keyboard.rightArrowKey) - GetPressedValue(keyboard.leftArrowKey);
 
                 verticalAngle = Mathf.Clamp(
                     verticalAngle + verticalInput * angleChangeSpeed * Time.deltaTime,
@@ -158,6 +143,7 @@ public class PlayerInputControl : MonoBehaviour
                     maxHorizontalAngle);
 
                 launchDirectionIndicator?.SetAngles(verticalAngle, horizontalAngle);
+                launchDirectionIndicator?.SetAngleText(verticalAngle, horizontalAngle);
             })
             .AddTo(this);
     }
@@ -172,11 +158,11 @@ public class PlayerInputControl : MonoBehaviour
     }
 
     /// <summary>
-    /// Returns one when the action key is pressed.
-    /// アクションキーが押されている場合に1を返します。
+    /// Returns one when the key is pressed.
+    /// キーが押されている場合に1を返します。
     /// </summary>
-    private float GetPressedValue(InputAction action)
+    private float GetPressedValue(KeyControl key)
     {
-        return action != null && action.IsPressed() ? 1.0f : 0.0f;
+        return key != null && key.isPressed ? 1.0f : 0.0f;
     }
 }

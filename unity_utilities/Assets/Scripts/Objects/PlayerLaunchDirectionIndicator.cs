@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerLaunchDirectionIndicator : MonoBehaviour
 {
@@ -11,9 +12,17 @@ public class PlayerLaunchDirectionIndicator : MonoBehaviour
     [SerializeField]
     private Color indicatorColor = new Color(0.95f, 0.95f, 0.35f, 1.0f);
 
+    [SerializeField]
+    private Vector2 angleTextAnchoredPosition = new Vector2(-128.0f, -108.0f);
+
+    [SerializeField]
+    private Vector2 angleTextSize = new Vector2(240.0f, 48.0f);
+
     private Transform indicatorTransform;
 
     private Material indicatorMaterial;
+
+    private Text angleText;
 
     /// <summary>
     /// Creates the 3D launch direction indicator.
@@ -22,6 +31,7 @@ public class PlayerLaunchDirectionIndicator : MonoBehaviour
     void Awake()
     {
         CreateIndicator();
+        CreateAngleText();
     }
 
     /// <summary>
@@ -54,6 +64,20 @@ public class PlayerLaunchDirectionIndicator : MonoBehaviour
     }
 
     /// <summary>
+    /// Updates the debug text for the selected launch angles.
+    /// 選択中の発射角度のデバッグ表示を更新します。
+    /// </summary>
+    public void SetAngleText(float verticalAngle, float horizontalAngle)
+    {
+        if (angleText == null)
+        {
+            return;
+        }
+
+        angleText.text = $"X: {verticalAngle:0.0}°\nY: {horizontalAngle:0.0}°";
+    }
+
+    /// <summary>
     /// Creates the runtime 3D object used as the direction indicator.
     /// 方向表示として使用する実行時3Dオブジェクトを生成します。
     /// </summary>
@@ -81,6 +105,39 @@ public class PlayerLaunchDirectionIndicator : MonoBehaviour
         meshRenderer.sharedMaterial = indicatorMaterial;
         meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         meshRenderer.receiveShadows = false;
+    }
+
+    /// <summary>
+    /// Creates the screen-space debug text under the indicator.
+    /// インジケーター下側にスクリーン空間のデバッグ表示を生成します。
+    /// </summary>
+    private void CreateAngleText()
+    {
+        var canvasObject = new GameObject("LaunchAngleDebugCanvas");
+        canvasObject.transform.SetParent(transform, false);
+
+        var canvas = canvasObject.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+
+        canvasObject.AddComponent<CanvasScaler>();
+        canvasObject.AddComponent<GraphicRaycaster>();
+
+        var textObject = new GameObject("LaunchAngleDebugText");
+        textObject.transform.SetParent(canvasObject.transform, false);
+
+        var rectTransform = textObject.AddComponent<RectTransform>();
+        rectTransform.anchorMin = new Vector2(1.0f, 1.0f);
+        rectTransform.anchorMax = new Vector2(1.0f, 1.0f);
+        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.anchoredPosition = angleTextAnchoredPosition;
+        rectTransform.sizeDelta = angleTextSize;
+
+        angleText = textObject.AddComponent<Text>();
+        angleText.alignment = TextAnchor.MiddleCenter;
+        angleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        angleText.fontSize = 18;
+        angleText.color = Color.white;
+        SetAngleText(0.0f, 0.0f);
     }
 
     /// <summary>
