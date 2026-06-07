@@ -10,21 +10,10 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     GameObject targetPrefab;
 
-    // Controls the maximum interval for fixing each target layer.
-    // 各ターゲット段を固定する最大間隔を調整します。
+    // Controls the interval for fixing each target layer.
+    // 各ターゲット段を固定する間隔を調整します。
     [SerializeField]
-    private float layerSettleTimeoutSeconds = 0.2f;
-
-    // Controls how long a layer must stay nearly stopped before it is fixed.
-    // 段がほぼ停止してから固定するまでの待機時間を調整します。
-    [SerializeField]
-    private float layerStableSeconds = 0.08f;
-
-    [SerializeField]
-    private float settleVelocityThreshold = 0.04f;
-
-    [SerializeField]
-    private float settleAngularVelocityThreshold = 0.08f;
+    private float layerFixIntervalSeconds = 0.2f;
 
     private bool trigger = default;
 
@@ -155,29 +144,11 @@ public class CreateTargets : MonoBehaviour
     private async UniTask WaitForLayerSettledAsync(List<Target> layer, CancellationToken cancellationToken)
     {
         var elapsedSeconds = 0.0f;
-        var stableSeconds = 0.0f;
-
-        while (elapsedSeconds < layerSettleTimeoutSeconds)
+        while (elapsedSeconds < layerFixIntervalSeconds)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             if (isLaunchStarted)
-            {
-                return;
-            }
-
-            var isSettled = true;
-            foreach (var target in layer)
-            {
-                if (target != null && !target.IsSettled(settleVelocityThreshold, settleAngularVelocityThreshold))
-                {
-                    isSettled = false;
-                    break;
-                }
-            }
-
-            stableSeconds = isSettled ? stableSeconds + Time.fixedDeltaTime : 0.0f;
-            if (stableSeconds >= layerStableSeconds)
             {
                 return;
             }

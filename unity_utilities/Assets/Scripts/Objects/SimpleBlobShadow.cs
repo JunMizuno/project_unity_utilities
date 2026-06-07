@@ -26,26 +26,25 @@ public class SimpleBlobShadow : MonoBehaviour
 
     private Texture2D shadowTexture;
 
+    private Mesh shadowMesh;
+
     /// <summary>
     /// Creates the runtime shadow object.
     /// 実行時に使用する影オブジェクトを生成します。
     /// </summary>
     void Awake()
     {
-        var shadowObject = GameObject.CreatePrimitive(PrimitiveType.Quad);
-        shadowObject.name = $"{gameObject.name}_BlobShadow";
-        shadowObject.transform.SetParent(transform, false);
+        var shadowObject = new GameObject($"{gameObject.name}_BlobShadow");
+        var meshFilter = shadowObject.AddComponent<MeshFilter>();
+        var meshRenderer = shadowObject.AddComponent<MeshRenderer>();
 
-        var collider = shadowObject.GetComponent<Collider>();
-        if (collider != null)
-        {
-            Destroy(collider);
-        }
+        shadowMesh = CreateShadowMesh();
+        meshFilter.sharedMesh = shadowMesh;
+        shadowObject.transform.SetParent(transform, false);
 
         shadowTransform = shadowObject.transform;
         shadowMaterial = CreateShadowMaterial();
 
-        var meshRenderer = shadowObject.GetComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = shadowMaterial;
         meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         meshRenderer.receiveShadows = false;
@@ -109,6 +108,36 @@ public class SimpleBlobShadow : MonoBehaviour
     }
 
     /// <summary>
+    /// Creates a quad mesh without a collider for the blob shadow.
+    /// コライダーを持たない丸影用のQuadメッシュを生成します。
+    /// </summary>
+    private Mesh CreateShadowMesh()
+    {
+        var mesh = new Mesh
+        {
+            name = $"{gameObject.name}_BlobShadowMesh",
+            vertices = new[]
+            {
+                new Vector3(-0.5f, -0.5f, 0.0f),
+                new Vector3(0.5f, -0.5f, 0.0f),
+                new Vector3(-0.5f, 0.5f, 0.0f),
+                new Vector3(0.5f, 0.5f, 0.0f)
+            },
+            uv = new[]
+            {
+                new Vector2(0.0f, 0.0f),
+                new Vector2(1.0f, 0.0f),
+                new Vector2(0.0f, 1.0f),
+                new Vector2(1.0f, 1.0f)
+            },
+            triangles = new[] { 0, 2, 1, 2, 3, 1 }
+        };
+        mesh.RecalculateBounds();
+
+        return mesh;
+    }
+
+    /// <summary>
     /// Creates a radial alpha texture for a soft blob shadow.
     /// 柔らかい丸影用の放射状アルファテクスチャを生成します。
     /// </summary>
@@ -157,6 +186,11 @@ public class SimpleBlobShadow : MonoBehaviour
         if (shadowTexture != null)
         {
             Destroy(shadowTexture);
+        }
+
+        if (shadowMesh != null)
+        {
+            Destroy(shadowMesh);
         }
     }
 }
