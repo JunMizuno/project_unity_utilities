@@ -24,6 +24,8 @@ public class SimpleBlobShadow : MonoBehaviour
 
     private Material shadowMaterial;
 
+    private Texture2D shadowTexture;
+
     /// <summary>
     /// Creates the runtime shadow object.
     /// 実行時に使用する影オブジェクトを生成します。
@@ -100,9 +102,45 @@ public class SimpleBlobShadow : MonoBehaviour
         material.SetFloat("_ZWrite", 0.0f);
         material.SetFloat("_Cull", (float)UnityEngine.Rendering.CullMode.Off);
         material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+        material.SetTexture("_BaseMap", CreateShadowTexture());
         material.SetColor("_BaseColor", shadowColor);
 
         return material;
+    }
+
+    /// <summary>
+    /// Creates a radial alpha texture for a soft blob shadow.
+    /// 柔らかい丸影用の放射状アルファテクスチャを生成します。
+    /// </summary>
+    private Texture2D CreateShadowTexture()
+    {
+        const int textureSize = 64;
+        shadowTexture = new Texture2D(textureSize, textureSize, TextureFormat.RGBA32, false)
+        {
+            name = $"{gameObject.name}_BlobShadowTexture",
+            wrapMode = TextureWrapMode.Clamp,
+            filterMode = FilterMode.Bilinear
+        };
+
+        var center = new Vector2((textureSize - 1) * 0.5f, (textureSize - 1) * 0.5f);
+        var radius = textureSize * 0.5f;
+        var pixels = new Color[textureSize * textureSize];
+
+        for (var y = 0; y < textureSize; y++)
+        {
+            for (var x = 0; x < textureSize; x++)
+            {
+                var distance = Vector2.Distance(new Vector2(x, y), center) / radius;
+                var alpha = Mathf.SmoothStep(1.0f, 0.0f, distance);
+                alpha *= alpha;
+                pixels[y * textureSize + x] = new Color(1.0f, 1.0f, 1.0f, alpha);
+            }
+        }
+
+        shadowTexture.SetPixels(pixels);
+        shadowTexture.Apply(false, true);
+
+        return shadowTexture;
     }
 
     /// <summary>
@@ -114,6 +152,11 @@ public class SimpleBlobShadow : MonoBehaviour
         if (shadowMaterial != null)
         {
             Destroy(shadowMaterial);
+        }
+
+        if (shadowTexture != null)
+        {
+            Destroy(shadowTexture);
         }
     }
 }
