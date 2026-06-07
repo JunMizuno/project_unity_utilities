@@ -29,6 +29,15 @@ public class Player : MonoBehaviour
     /// </summary>
     public void AddForceToPlayer(float powerRate)
     {
+        AddForceToPlayer(powerRate, Vector3.forward);
+    }
+
+    /// <summary>
+    /// Resets the player ball and applies impulse in the specified direction.
+    /// 指定した方向へプレイヤーボールをリセットして力を加えます。
+    /// </summary>
+    public void AddForceToPlayer(float powerRate, Vector3 launchDirection)
+    {
         this.gameObject.transform.localPosition = new Vector3(0.0f, 2.0f, -8.0f);
         this.gameObject.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
         rigidBody.linearVelocity = Vector3.zero;
@@ -37,6 +46,6 @@ public class Player : MonoBehaviour
         rigidBody.mass = 1.0f;
         LaunchedSubject.OnNext(this);
         var launchForce = Mathf.Lerp(minLaunchForce, maxLaunchForce, Mathf.Clamp01(powerRate));
-        rigidBody.AddForce(Vector3.forward * launchForce, ForceMode.Impulse);
+        rigidBody.AddForce(launchDirection.normalized * launchForce, ForceMode.Impulse);
     }
 }

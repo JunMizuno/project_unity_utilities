@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 3876873311603251431}
   - component: {fileID: 5599054957054876401}
   - component: {fileID: 7043201741639774812}
+  - component: {fileID: 5729936489182028012}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -173,6 +174,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInputControl
   player: {fileID: 2334383943369416835}
   powerGauge: {fileID: 5599054957054876401}
+  launchDirectionIndicator: {fileID: 5729936489182028012}
+  minVerticalAngle: 0
+  maxVerticalAngle: 75
+  minHorizontalAngle: -75
+  maxHorizontalAngle: 75
+  angleChangeSpeed: 45
 --- !u!114 &5599054957054876401
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -205,3 +212,18 @@ MonoBehaviour:
   minAlpha: 0.04
   maxAlpha: 0.26
   shadowColor: {r: 0, g: 0, b: 0, a: 0.26}
+--- !u!114 &5729936489182028012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 325876731288962654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c92383bd2274b9f8bb72888635e9650, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerLaunchDirectionIndicator
+  viewportPosition: {x: 0.86, y: 0.82, z: 4}
+  indicatorScale: {x: 0.08, y: 0.08, z: 1.2}
+  indicatorColor: {r: 0.95, g: 0.95, b: 0.35, a: 1}
