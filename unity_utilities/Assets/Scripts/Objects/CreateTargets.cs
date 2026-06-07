@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using R3;
 
@@ -7,7 +10,23 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     GameObject targetPrefab;
 
+    [SerializeField]
+    private float layerSettleTimeoutSeconds = 2.0f;
+
+    [SerializeField]
+    private float layerStableSeconds = 0.25f;
+
+    [SerializeField]
+    private float settleVelocityThreshold = 0.04f;
+
+    [SerializeField]
+    private float settleAngularVelocityThreshold = 0.08f;
+
     private bool trigger = default;
+
+    private readonly List<List<Target>> targetLayers = new List<List<Target>>();
+
+    private bool isLaunchStarted;
 
     /// <summary>
     /// Starts the initial target generation behavior.
@@ -18,6 +37,7 @@ public class CreateTargets : MonoBehaviour
         Player.LaunchedSubject
             .Subscribe(_ =>
             {
+                isLaunchStarted = true;
                 SetTargetPhysicsEnabled(true);
             })
             .AddTo(this);
@@ -27,6 +47,7 @@ public class CreateTargets : MonoBehaviour
             {
                 trigger = true;
                 CreateTargetObjects();
+                SettleTargetLayersAsync(this.GetCancellationTokenOnDestroy()).Forget();
             })
             .AddTo(this);
     }
@@ -46,6 +67,9 @@ public class CreateTargets : MonoBehaviour
     /// </summary>
     private void CreateTargetObjects()
     {
+        targetLayers.Clear();
+        isLaunchStarted = false;
+
         foreach (Transform child in this.gameObject.transform)
         {
             Destroy(child.gameObject);
@@ -66,6 +90,11 @@ public class CreateTargets : MonoBehaviour
         {
             for (var j = 0; j < maxHeightCount; j++)
             {
+                while (targetLayers.Count <= j)
+                {
+                    targetLayers.Add(new List<Target>());
+                }
+
                 for (var k = 0; k < maxDepthCount; k++)
                 {
                     var instance = Instantiate(targetPrefab, this.gameObject.transform);
@@ -83,8 +112,88 @@ public class CreateTargets : MonoBehaviour
                     if (target != null)
                     {
                         target.SetPhysicsEnabled(false);
+                        targetLayers[j].Add(target);
                     }
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Drops and fixes generated targets from the bottom layer upward.
+    /// 生成したターゲットを下段から順に落下させて固定します。
+    /// </summary>
+    private async UniTaskVoid SettleTargetLayersAsync(CancellationToken cancellationToken)
+    {
+        foreach (var layer in targetLayers)
+        {
+            if (isLaunchStarted || cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            SetLayerPhysicsEnabled(layer, true);
+            await WaitForLayerSettledAsync(layer, cancellationToken);
+
+            if (isLaunchStarted || cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            SetLayerPhysicsEnabled(layer, false);
+        }
+    }
+
+    /// <summary>
+    /// Waits until all targets in a layer stop moving or the timeout is reached.
+    /// レイヤー内の全ターゲットが停止するか、タイムアウトするまで待機します。
+    /// </summary>
+    private async UniTask WaitForLayerSettledAsync(List<Target> layer, CancellationToken cancellationToken)
+    {
+        var elapsedSeconds = 0.0f;
+        var stableSeconds = 0.0f;
+
+        while (elapsedSeconds < layerSettleTimeoutSeconds)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (isLaunchStarted)
+            {
+                return;
+            }
+
+            var isSettled = true;
+            foreach (var target in layer)
+            {
+                if (target != null && !target.IsSettled(settleVelocityThreshold, settleAngularVelocityThreshold))
+                {
+                    isSettled = false;
+                    break;
+                }
+            }
+
+            stableSeconds = isSettled ? stableSeconds + Time.fixedDeltaTime : 0.0f;
+            if (stableSeconds >= layerStableSeconds)
+            {
+                return;
+            }
+
+            elapsedSeconds += Time.fixedDeltaTime;
+            await UniTask.WaitForFixedUpdate(cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Sets whether a generated target layer is controlled by physics.
+    /// 生成済みターゲットのレイヤーを物理演算で制御するかどうかを設定します。
+    /// </summary>
+    private void SetLayerPhysicsEnabled(List<Target> layer, bool enabled)
+    {
+        foreach (var target in layer)
+        {
+            if (target != null)
+            {
+                target.SetPhysicsEnabled(enabled);
             }
         }
     }

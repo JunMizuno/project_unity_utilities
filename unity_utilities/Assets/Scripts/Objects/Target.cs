@@ -33,6 +33,27 @@ public class Target : MonoBehaviour
         {
             rigidBody.WakeUp();
         }
+        else
+        {
+            rigidBody.linearVelocity = Vector3.zero;
+            rigidBody.angularVelocity = Vector3.zero;
+            rigidBody.Sleep();
+        }
+    }
+
+    /// <summary>
+    /// Returns whether this target has nearly stopped moving.
+    /// ターゲットの移動がほぼ停止しているかどうかを返します。
+    /// </summary>
+    public bool IsSettled(float velocityThreshold, float angularVelocityThreshold)
+    {
+        if (rigidBody == null)
+        {
+            return true;
+        }
+
+        return rigidBody.linearVelocity.sqrMagnitude <= velocityThreshold * velocityThreshold
+            && rigidBody.angularVelocity.sqrMagnitude <= angularVelocityThreshold * angularVelocityThreshold;
     }
 
     /// <summary>
