@@ -10,11 +10,15 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     GameObject targetPrefab;
 
+    // Controls the maximum interval for fixing each target layer.
+    // 各ターゲット段を固定する最大間隔を調整します。
     [SerializeField]
-    private float layerSettleTimeoutSeconds = 2.0f;
+    private float layerSettleTimeoutSeconds = 0.2f;
 
+    // Controls how long a layer must stay nearly stopped before it is fixed.
+    // 段がほぼ停止してから固定するまでの待機時間を調整します。
     [SerializeField]
-    private float layerStableSeconds = 0.25f;
+    private float layerStableSeconds = 0.08f;
 
     [SerializeField]
     private float settleVelocityThreshold = 0.04f;
