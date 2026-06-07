@@ -8,11 +8,26 @@ public class Player : MonoBehaviour
     [SerializeField]
     private Rigidbody rigidBody;
 
+    [SerializeField]
+    private float minLaunchForce = 10.0f;
+
+    [SerializeField]
+    private float maxLaunchForce = 30.0f;
+
     /// <summary>
     /// Resets the player ball and applies forward impulse.
     /// プレイヤーボールをリセットし、前方への力を加えます。
     /// </summary>
     public void AddForceToPlayer()
+    {
+        AddForceToPlayer(0.5f);
+    }
+
+    /// <summary>
+    /// Resets the player ball and applies forward impulse based on the power rate.
+    /// パワー割合に応じてプレイヤーボールをリセットし、前方への力を加えます。
+    /// </summary>
+    public void AddForceToPlayer(float powerRate)
     {
         this.gameObject.transform.localPosition = new Vector3(0.0f, 2.0f, -8.0f);
         this.gameObject.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
@@ -21,6 +36,7 @@ public class Player : MonoBehaviour
         rigidBody.useGravity = true;
         rigidBody.mass = 1.0f;
         LaunchedSubject.OnNext(this);
-        rigidBody.AddForce(Vector3.forward * 20.0f, ForceMode.Impulse);
+        var launchForce = Mathf.Lerp(minLaunchForce, maxLaunchForce, Mathf.Clamp01(powerRate));
+        rigidBody.AddForce(Vector3.forward * launchForce, ForceMode.Impulse);
     }
 }

@@ -8,6 +8,9 @@ public class PlayerInputControl : MonoBehaviour
     [SerializeField]
     private Player player;
 
+    [SerializeField]
+    private PlayerPowerGauge powerGauge;
+
     private InputAction launchAction;
 
     /// <summary>
@@ -19,6 +22,11 @@ public class PlayerInputControl : MonoBehaviour
         if (player == null)
         {
             player = GetComponent<Player>();
+        }
+
+        if (powerGauge == null)
+        {
+            powerGauge = GetComponent<PlayerPowerGauge>();
         }
 
         launchAction = new InputAction("Launch", InputActionType.Button, "<Keyboard>/space");
@@ -70,7 +78,8 @@ public class PlayerInputControl : MonoBehaviour
             .Where(_ => launchAction.WasPressedThisFrame())
             .Subscribe(_ =>
             {
-                player.AddForceToPlayer();
+                var powerRate = powerGauge != null ? powerGauge.PowerRate : 0.5f;
+                player.AddForceToPlayer(powerRate);
             })
             .AddTo(this);
     }
