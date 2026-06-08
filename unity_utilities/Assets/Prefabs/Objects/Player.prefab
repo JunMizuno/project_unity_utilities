@@ -175,11 +175,12 @@ MonoBehaviour:
   player: {fileID: 2334383943369416835}
   powerGauge: {fileID: 5599054957054876401}
   launchDirectionIndicator: {fileID: 5729936489182028012}
-  minVerticalAngle: 0
-  maxVerticalAngle: 75
+  minVerticalAngle: -45
+  maxVerticalAngle: 45
   minHorizontalAngle: -75
   maxHorizontalAngle: 75
-  angleChangeSpeed: 45
+  verticalAngleChangeSpeed: 45
+  horizontalAngleChangeSpeed: 45
 --- !u!114 &5599054957054876401
 MonoBehaviour:
   m_ObjectHideFlags: 0

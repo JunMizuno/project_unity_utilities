@@ -16,10 +16,10 @@ public class PlayerInputControl : MonoBehaviour
     private PlayerLaunchDirectionIndicator launchDirectionIndicator;
 
     [SerializeField]
-    private float minVerticalAngle = 0.0f;
+    private float minVerticalAngle = -45.0f;
 
     [SerializeField]
-    private float maxVerticalAngle = 75.0f;
+    private float maxVerticalAngle = 45.0f;
 
     [SerializeField]
     private float minHorizontalAngle = -75.0f;
@@ -27,8 +27,15 @@ public class PlayerInputControl : MonoBehaviour
     [SerializeField]
     private float maxHorizontalAngle = 75.0f;
 
+    // Controls how quickly the up/down keys change the vertical launch angle.
+    // 上下キーで発射角度を変更する速度を調整します。
     [SerializeField]
-    private float angleChangeSpeed = 45.0f;
+    private float verticalAngleChangeSpeed = 45.0f;
+
+    // Controls how quickly the left/right keys change the horizontal launch angle.
+    // 左右キーで発射角度を変更する速度を調整します。
+    [SerializeField]
+    private float horizontalAngleChangeSpeed = 45.0f;
 
     private InputAction launchAction;
 
@@ -134,11 +141,11 @@ public class PlayerInputControl : MonoBehaviour
                 var horizontalInput = GetPressedValue(keyboard.rightArrowKey) - GetPressedValue(keyboard.leftArrowKey);
 
                 verticalAngle = Mathf.Clamp(
-                    verticalAngle + verticalInput * angleChangeSpeed * Time.deltaTime,
+                    verticalAngle + verticalInput * verticalAngleChangeSpeed * Time.deltaTime,
                     minVerticalAngle,
                     maxVerticalAngle);
                 horizontalAngle = Mathf.Clamp(
-                    horizontalAngle + horizontalInput * angleChangeSpeed * Time.deltaTime,
+                    horizontalAngle + horizontalInput * horizontalAngleChangeSpeed * Time.deltaTime,
                     minHorizontalAngle,
                     maxHorizontalAngle);
 
