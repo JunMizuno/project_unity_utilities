@@ -15,6 +15,13 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     private float layerFixIntervalSeconds = 0.2f;
 
+    // Delay before the first target generation starts.
+    // Increase to wait longer before blocks appear. Decrease to start placement sooner.
+    // 最初のターゲット生成を開始するまでの待ち時間です。
+    // 上げるとブロック配置開始が遅くなり、下げると早く開始されます。
+    [SerializeField]
+    private float initialCreateDelaySeconds = 0.2f;
+
     // Minimum additional force applied when the ball hits targets with weak launch power.
     // Increase to make even weak shots scatter blocks more. Decrease to keep weak shots calmer.
     // 弱い発射威力でターゲットに当たったときに加える追加の最小衝撃力です。
@@ -83,7 +90,7 @@ public class CreateTargets : MonoBehaviour
             })
             .AddTo(this);
 
-        Observable.Timer(TimeSpan.FromSeconds(1))
+        Observable.Timer(TimeSpan.FromSeconds(initialCreateDelaySeconds))
             .Subscribe(_ =>
             {
                 trigger = true;
