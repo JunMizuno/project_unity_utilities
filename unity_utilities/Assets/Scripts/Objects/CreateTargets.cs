@@ -21,6 +21,8 @@ public class CreateTargets : MonoBehaviour
 
     private bool isLaunchStarted;
 
+    private bool isTargetPhysicsReleased;
+
     /// <summary>
     /// Starts the initial target generation behavior.
     /// ターゲットを最初に一度だけ生成する処理を開始します。
@@ -31,7 +33,10 @@ public class CreateTargets : MonoBehaviour
             .Subscribe(_ =>
             {
                 isLaunchStarted = true;
-                SetTargetPhysicsEnabled(false);
+                if (!isTargetPhysicsReleased)
+                {
+                    SetTargetPhysicsEnabled(false);
+                }
             })
             .AddTo(this);
 
@@ -39,6 +44,12 @@ public class CreateTargets : MonoBehaviour
             .Where(target => target != null && target.transform.IsChildOf(transform))
             .Subscribe(_ =>
             {
+                if (isTargetPhysicsReleased)
+                {
+                    return;
+                }
+
+                isTargetPhysicsReleased = true;
                 SetTargetPhysicsEnabled(true);
             })
             .AddTo(this);
@@ -70,6 +81,7 @@ public class CreateTargets : MonoBehaviour
     {
         targetLayers.Clear();
         isLaunchStarted = false;
+        isTargetPhysicsReleased = false;
 
         foreach (Transform child in this.gameObject.transform)
         {
