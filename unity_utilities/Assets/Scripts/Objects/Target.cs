@@ -42,6 +42,20 @@ public class Target : MonoBehaviour
     }
 
     /// <summary>
+    /// Applies an explosion impulse to this target.
+    /// このターゲットへ爆発方向の瞬間的な力を加えます。
+    /// </summary>
+    public void AddExplosionImpulse(Vector3 explosionPosition, float force, float radius, float upwardsModifier)
+    {
+        if (rigidBody == null)
+        {
+            return;
+        }
+
+        rigidBody.AddExplosionForce(force, explosionPosition, radius, upwardsModifier, ForceMode.Impulse);
+    }
+
+    /// <summary>
     /// Runs per-frame target processing.
     /// ターゲットのフレームごとの処理を実行します。
     /// </summary>

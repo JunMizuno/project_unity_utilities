@@ -15,6 +15,18 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     private float layerFixIntervalSeconds = 0.2f;
 
+    [SerializeField]
+    private float minImpactExplosionForce = 4.0f;
+
+    [SerializeField]
+    private float maxImpactExplosionForce = 18.0f;
+
+    [SerializeField]
+    private float impactExplosionRadius = 3.0f;
+
+    [SerializeField]
+    private float impactExplosionUpwardsModifier = 0.35f;
+
     private bool trigger = default;
 
     private readonly List<List<Target>> targetLayers = new List<List<Target>>();
@@ -41,8 +53,8 @@ public class CreateTargets : MonoBehaviour
             .AddTo(this);
 
         Player.HitTargetSubject
-            .Where(target => target != null && target.transform.IsChildOf(transform))
-            .Subscribe(_ =>
+            .Where(hit => hit.Target != null && hit.Target.transform.IsChildOf(transform))
+            .Subscribe(hit =>
             {
                 if (isTargetPhysicsReleased)
                 {
@@ -51,6 +63,7 @@ public class CreateTargets : MonoBehaviour
 
                 isTargetPhysicsReleased = true;
                 SetTargetPhysicsEnabled(true);
+                AddImpactExplosionForceAsync(hit, this.GetCancellationTokenOnDestroy()).Forget();
             })
             .AddTo(this);
 
@@ -205,6 +218,38 @@ public class CreateTargets : MonoBehaviour
             if (target != null)
             {
                 target.SetPhysicsEnabled(enabled);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies additional impact force after target physics is released.
+    /// ターゲットの物理解放後に追加の衝突力を適用します。
+    /// </summary>
+    private async UniTaskVoid AddImpactExplosionForceAsync(PlayerTargetHit hit, CancellationToken cancellationToken)
+    {
+        var isCanceled = await UniTask.WaitForFixedUpdate(cancellationToken).SuppressCancellationThrow();
+        if (isCanceled)
+        {
+            return;
+        }
+
+        var force = Mathf.Lerp(minImpactExplosionForce, maxImpactExplosionForce, Mathf.Clamp01(hit.PowerRate));
+        AddImpactExplosionForce(hit.HitPoint, force);
+    }
+
+    /// <summary>
+    /// Applies explosion impulse to all generated targets.
+    /// 生成済みのすべてのターゲットへ爆発方向の瞬間的な力を加えます。
+    /// </summary>
+    private void AddImpactExplosionForce(Vector3 hitPoint, float force)
+    {
+        foreach (Transform child in this.gameObject.transform)
+        {
+            var target = child.GetComponent<Target>();
+            if (target != null)
+            {
+                target.AddExplosionImpulse(hitPoint, force, impactExplosionRadius, impactExplosionUpwardsModifier);
             }
         }
     }

@@ -6,7 +6,7 @@ public class Player : MonoBehaviour
 {
     public static readonly Subject<Player> LaunchedSubject = new Subject<Player>();
 
-    public static readonly Subject<Target> HitTargetSubject = new Subject<Target>();
+    public static readonly Subject<PlayerTargetHit> HitTargetSubject = new Subject<PlayerTargetHit>();
 
     [SerializeField]
     private Rigidbody rigidBody;
@@ -33,6 +33,8 @@ public class Player : MonoBehaviour
     private Quaternion initialLocalRotation;
 
     private bool hasHitTarget;
+
+    private float currentPowerRate;
 
     /// <summary>
     /// Caches required components and prepares the runtime-only ball material.
@@ -100,8 +102,9 @@ public class Player : MonoBehaviour
         rigidBody.mass = 1.0f;
         SetPlayerAlpha(launchedAlpha);
         hasHitTarget = false;
+        currentPowerRate = Mathf.Clamp01(powerRate);
         LaunchedSubject.OnNext(this);
-        var launchForce = Mathf.Lerp(minLaunchForce, maxLaunchForce, Mathf.Clamp01(powerRate));
+        var launchForce = Mathf.Lerp(minLaunchForce, maxLaunchForce, currentPowerRate);
         rigidBody.AddForce(launchDirection.normalized * launchForce, ForceMode.Impulse);
     }
 
@@ -123,7 +126,8 @@ public class Player : MonoBehaviour
         }
 
         hasHitTarget = true;
-        HitTargetSubject.OnNext(target);
+        var hitPoint = collision.contactCount > 0 ? collision.GetContact(0).point : collision.collider.transform.position;
+        HitTargetSubject.OnNext(new PlayerTargetHit(target, hitPoint, currentPowerRate));
     }
 
     /// <summary>
@@ -224,5 +228,25 @@ public class Player : MonoBehaviour
         {
             runtimeMaterial.SetFloat(propertyName, value);
         }
+    }
+}
+
+public readonly struct PlayerTargetHit
+{
+    public readonly Target Target;
+
+    public readonly Vector3 HitPoint;
+
+    public readonly float PowerRate;
+
+    /// <summary>
+    /// Stores data for the player's first target collision.
+    /// プレイヤーが最初にターゲットへ衝突した情報を保持します。
+    /// </summary>
+    public PlayerTargetHit(Target target, Vector3 hitPoint, float powerRate)
+    {
+        Target = target;
+        HitPoint = hitPoint;
+        PowerRate = powerRate;
     }
 }

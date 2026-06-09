@@ -506,6 +506,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CreateTargets
   targetPrefab: {fileID: 3859646832928500369, guid: e83befbba78882a41b6bd72e631278f5, type: 3}
   layerFixIntervalSeconds: 0.2
+  minImpactExplosionForce: 4
+  maxImpactExplosionForce: 18
+  impactExplosionRadius: 3
+  impactExplosionUpwardsModifier: 0.35
 --- !u!1 &1087914303
 GameObject:
   m_ObjectHideFlags: 0
