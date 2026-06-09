@@ -58,8 +58,8 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Resets the player ball and applies forward impulse.
-    /// プレイヤーボールをリセットし、前方への力を加えます。
+    /// Applies forward impulse from the current player ball position.
+    /// 現在のプレイヤーボール位置から前方への力を加えます。
     /// </summary>
     public void AddForceToPlayer()
     {
@@ -67,8 +67,8 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Resets the player ball and applies forward impulse based on the power rate.
-    /// パワー割合に応じてプレイヤーボールをリセットし、前方への力を加えます。
+    /// Applies forward impulse from the current player ball position based on the power rate.
+    /// パワー割合に応じて現在のプレイヤーボール位置から前方への力を加えます。
     /// </summary>
     public void AddForceToPlayer(float powerRate)
     {
@@ -76,12 +76,11 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Resets the player ball and applies impulse in the specified direction.
-    /// 指定した方向へプレイヤーボールをリセットして力を加えます。
+    /// Applies impulse in the specified direction from the current player ball position.
+    /// 現在のプレイヤーボール位置から指定した方向へ力を加えます。
     /// </summary>
     public void AddForceToPlayer(float powerRate, Vector3 launchDirection)
     {
-        this.gameObject.transform.localPosition = new Vector3(0.0f, 2.0f, -8.0f);
         this.gameObject.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
         rigidBody.linearVelocity = Vector3.zero;
         rigidBody.angularVelocity = Vector3.zero;
