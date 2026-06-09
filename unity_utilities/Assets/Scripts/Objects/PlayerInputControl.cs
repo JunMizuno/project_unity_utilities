@@ -82,10 +82,12 @@ public class PlayerInputControl : MonoBehaviour
     /// </summary>
     void Start()
     {
+        SetLaunchReadyState();
         SetLaunchInput();
         SetAngleInput();
         launchDirectionIndicator?.SetAngles(verticalAngle, horizontalAngle);
         launchDirectionIndicator?.SetAngleText(verticalAngle, horizontalAngle);
+        SetLaunchUiVisible(player != null && player.IsReady);
     }
 
     /// <summary>
@@ -113,7 +115,7 @@ public class PlayerInputControl : MonoBehaviour
     private void SetLaunchInput()
     {
         Observable.EveryUpdate()
-            .Where(_ => launchAction.WasPressedThisFrame())
+            .Where(_ => player != null && player.IsReady && launchAction.WasPressedThisFrame())
             .Subscribe(_ =>
             {
                 var powerRate = powerGauge != null ? powerGauge.PowerRate : 0.5f;
@@ -131,6 +133,11 @@ public class PlayerInputControl : MonoBehaviour
         Observable.EveryUpdate()
             .Subscribe(_ =>
             {
+                if (player == null || !player.IsReady)
+                {
+                    return;
+                }
+
                 var keyboard = Keyboard.current;
                 if (keyboard == null)
                 {
@@ -153,6 +160,28 @@ public class PlayerInputControl : MonoBehaviour
                 launchDirectionIndicator?.SetAngleText(verticalAngle, horizontalAngle);
             })
             .AddTo(this);
+    }
+
+    /// <summary>
+    /// Observes player launch-ready state and updates launch UI visibility.
+    /// プレイヤーの発射準備状態を監視し、発射UIの表示を更新します。
+    /// </summary>
+    private void SetLaunchReadyState()
+    {
+        Player.ReadyStateChangedSubject
+            .Where(state => state.Player == player)
+            .Subscribe(state => SetLaunchUiVisible(state.IsReady))
+            .AddTo(this);
+    }
+
+    /// <summary>
+    /// Shows launch controls only while the player ball can be launched.
+    /// プレイヤーボールが発射可能な間だけ発射操作UIを表示します。
+    /// </summary>
+    private void SetLaunchUiVisible(bool visible)
+    {
+        powerGauge?.SetVisible(visible);
+        launchDirectionIndicator?.SetVisible(visible);
     }
 
     /// <summary>

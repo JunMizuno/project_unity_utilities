@@ -4,6 +4,8 @@ using R3;
 
 public class Player : MonoBehaviour
 {
+    public static readonly Subject<PlayerReadyState> ReadyStateChangedSubject = new Subject<PlayerReadyState>();
+
     public static readonly Subject<Player> LaunchedSubject = new Subject<Player>();
 
     public static readonly Subject<PlayerTargetHit> HitTargetSubject = new Subject<PlayerTargetHit>();
@@ -26,6 +28,12 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float launchedAlpha = 1.0f;
 
+    [SerializeField]
+    private Camera mainCamera;
+
+    [SerializeField]
+    private float offscreenViewportPadding = 0.15f;
+
     private Material runtimeMaterial;
 
     private Vector3 initialLocalPosition;
@@ -35,6 +43,10 @@ public class Player : MonoBehaviour
     private bool hasHitTarget;
 
     private float currentPowerRate;
+
+    private bool isLaunched;
+
+    public bool IsReady { get; private set; }
 
     /// <summary>
     /// Caches required components and prepares the runtime-only ball material.
@@ -67,7 +79,35 @@ public class Player : MonoBehaviour
     /// </summary>
     private void Start()
     {
-        SetPlayerAlpha(readyAlpha);
+        SetLaunchReady(false);
+
+        CreateTargets.TargetPlacementCompletedSubject
+            .Subscribe(_ => SetLaunchReady(true))
+            .AddTo(this);
+
+        CreateTargets.AllTargetsStoppedSubject
+            .Subscribe(_ =>
+            {
+                if (isLaunched)
+                {
+                    SetLaunchReady(true);
+                }
+            })
+            .AddTo(this);
+    }
+
+    /// <summary>
+    /// Checks whether the launched player ball left the camera view.
+    /// 発射後のプレイヤーボールがカメラ表示外へ出たか確認します。
+    /// </summary>
+    private void Update()
+    {
+        if (!isLaunched || !IsPlayerOffscreen())
+        {
+            return;
+        }
+
+        SetLaunchReady(true);
     }
 
     /// <summary>
@@ -94,6 +134,12 @@ public class Player : MonoBehaviour
     /// </summary>
     public void AddForceToPlayer(float powerRate, Vector3 launchDirection)
     {
+        if (!IsReady)
+        {
+            return;
+        }
+
+        SetLaunchReady(false);
         ResetPlayerTransformToInitialPosition();
         this.gameObject.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
         rigidBody.linearVelocity = Vector3.zero;
@@ -103,6 +149,7 @@ public class Player : MonoBehaviour
         SetPlayerAlpha(launchedAlpha);
         hasHitTarget = false;
         currentPowerRate = Mathf.Clamp01(powerRate);
+        isLaunched = true;
         LaunchedSubject.OnNext(this);
         var launchForce = Mathf.Lerp(minLaunchForce, maxLaunchForce, currentPowerRate);
         rigidBody.AddForce(launchDirection.normalized * launchForce, ForceMode.Impulse);
@@ -146,6 +193,60 @@ public class Player : MonoBehaviour
 
         rigidBody.position = transform.position;
         rigidBody.rotation = transform.rotation;
+    }
+
+    /// <summary>
+    /// Changes whether the player ball can be launched.
+    /// プレイヤーボールを発射可能状態へ切り替えます。
+    /// </summary>
+    private void SetLaunchReady(bool ready)
+    {
+        IsReady = ready;
+        isLaunched = false;
+
+        if (ready)
+        {
+            ResetPlayerTransformToInitialPosition();
+            if (rigidBody != null)
+            {
+                rigidBody.linearVelocity = Vector3.zero;
+                rigidBody.angularVelocity = Vector3.zero;
+                rigidBody.useGravity = false;
+                rigidBody.Sleep();
+            }
+
+            SetPlayerAlpha(readyAlpha);
+        }
+        else
+        {
+            SetPlayerAlpha(launchedAlpha);
+        }
+
+        ReadyStateChangedSubject.OnNext(new PlayerReadyState(this, ready));
+    }
+
+    /// <summary>
+    /// Returns whether the player ball is outside the camera viewport.
+    /// プレイヤーボールがカメラの表示範囲外にあるかを返します。
+    /// </summary>
+    private bool IsPlayerOffscreen()
+    {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        if (mainCamera == null)
+        {
+            return false;
+        }
+
+        var viewportPosition = mainCamera.WorldToViewportPoint(transform.position);
+        return viewportPosition.z < 0.0f
+            || viewportPosition.x < -offscreenViewportPadding
+            || viewportPosition.x > 1.0f + offscreenViewportPadding
+            || viewportPosition.y < -offscreenViewportPadding
+            || viewportPosition.y > 1.0f + offscreenViewportPadding;
     }
 
     /// <summary>
@@ -248,5 +349,22 @@ public readonly struct PlayerTargetHit
         Target = target;
         HitPoint = hitPoint;
         PowerRate = powerRate;
+    }
+}
+
+public readonly struct PlayerReadyState
+{
+    public readonly Player Player;
+
+    public readonly bool IsReady;
+
+    /// <summary>
+    /// Stores player launch-ready state changes.
+    /// プレイヤーの発射準備状態の変更情報を保持します。
+    /// </summary>
+    public PlayerReadyState(Player player, bool isReady)
+    {
+        Player = player;
+        IsReady = isReady;
     }
 }

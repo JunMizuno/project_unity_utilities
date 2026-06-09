@@ -511,6 +511,9 @@ MonoBehaviour:
   maxImpactExplosionForce: 18
   impactExplosionRadius: 3
   impactExplosionUpwardsModifier: 0.35
+  targetStopCheckDelaySeconds: 1
+  targetStopVelocityThreshold: 0.05
+  targetStopStableSeconds: 0.5
 --- !u!1 &1087914303
 GameObject:
   m_ObjectHideFlags: 0

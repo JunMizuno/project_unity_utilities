@@ -43,6 +43,7 @@ public class PlayerLaunchDirectionIndicator : MonoBehaviour
     {
         SetAngles(0.0f, 0.0f);
         SetAngleText(0.0f, 0.0f);
+        SetVisible(false);
     }
 
     /// <summary>
@@ -79,5 +80,14 @@ public class PlayerLaunchDirectionIndicator : MonoBehaviour
         }
 
         angleText.text = $"X: {verticalAngle:0.0}°\nY: {horizontalAngle:0.0}°";
+    }
+
+    /// <summary>
+    /// Changes whether the launch direction indicator is visible.
+    /// 発射方向インジケーターの表示状態を切り替えます。
+    /// </summary>
+    public void SetVisible(bool visible)
+    {
+        gameObject.SetActive(visible);
     }
 }

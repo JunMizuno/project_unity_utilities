@@ -56,6 +56,21 @@ public class Target : MonoBehaviour
     }
 
     /// <summary>
+    /// Returns whether this target is moving above the velocity threshold.
+    /// このターゲットが速度しきい値を超えて動いているかを返します。
+    /// </summary>
+    public bool IsMoving(float velocityThreshold)
+    {
+        if (rigidBody == null || rigidBody.isKinematic)
+        {
+            return false;
+        }
+
+        return rigidBody.linearVelocity.sqrMagnitude > velocityThreshold * velocityThreshold
+            || rigidBody.angularVelocity.sqrMagnitude > velocityThreshold * velocityThreshold;
+    }
+
+    /// <summary>
     /// Runs per-frame target processing.
     /// ターゲットのフレームごとの処理を実行します。
     /// </summary>

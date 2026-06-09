@@ -7,6 +7,10 @@ using R3;
 
 public class CreateTargets : MonoBehaviour
 {
+    public static readonly Subject<CreateTargets> TargetPlacementCompletedSubject = new Subject<CreateTargets>();
+
+    public static readonly Subject<CreateTargets> AllTargetsStoppedSubject = new Subject<CreateTargets>();
+
     [SerializeField]
     GameObject targetPrefab;
 
@@ -49,6 +53,27 @@ public class CreateTargets : MonoBehaviour
     // 上げるとブロックが上へ跳ねやすくなり、下げるとフィールド上を横方向に動きやすくなります。
     [SerializeField]
     private float impactExplosionUpwardsModifier = 0.35f;
+
+    // Delay after impact before checking whether all blocks have stopped.
+    // Increase to wait longer before returning the ball. Decrease to make the next shot ready sooner.
+    // 衝突後、すべてのブロック停止を確認し始めるまでの待ち時間です。
+    // 上げるとボール復帰が遅くなり、下げると次の発射準備が早くなります。
+    [SerializeField]
+    private float targetStopCheckDelaySeconds = 1.0f;
+
+    // Velocity threshold used to judge whether each block has stopped.
+    // Increase to treat slow movement as stopped sooner. Decrease to wait for more complete stillness.
+    // 各ブロックが停止したと判定する速度しきい値です。
+    // 上げると低速移動中でも停止扱いになりやすく、下げるとより完全な静止を待ちます。
+    [SerializeField]
+    private float targetStopVelocityThreshold = 0.05f;
+
+    // Duration all blocks must remain under the velocity threshold.
+    // Increase to require more stable stillness. Decrease to return the ball sooner.
+    // すべてのブロックが速度しきい値未満を維持する必要がある時間です。
+    // 上げるとより安定した静止を待ち、下げるとボール復帰が早くなります。
+    [SerializeField]
+    private float targetStopStableSeconds = 0.5f;
 
     private bool trigger = default;
 
@@ -191,6 +216,8 @@ public class CreateTargets : MonoBehaviour
 
             SetLayerPhysicsEnabled(layer, false);
         }
+
+        TargetPlacementCompletedSubject.OnNext(this);
     }
 
     /// <summary>
@@ -259,6 +286,7 @@ public class CreateTargets : MonoBehaviour
 
         var force = Mathf.Lerp(minImpactExplosionForce, maxImpactExplosionForce, Mathf.Clamp01(hit.PowerRate));
         AddImpactExplosionForce(hit.HitPoint, force);
+        WaitForAllTargetsStoppedAsync(cancellationToken).Forget();
     }
 
     /// <summary>
@@ -275,5 +303,61 @@ public class CreateTargets : MonoBehaviour
                 target.AddExplosionImpulse(hitPoint, force, impactExplosionRadius, impactExplosionUpwardsModifier);
             }
         }
+    }
+
+    /// <summary>
+    /// Waits until all generated targets stop moving after impact.
+    /// 衝突後、生成済みターゲットがすべて停止するまで待機します。
+    /// </summary>
+    private async UniTaskVoid WaitForAllTargetsStoppedAsync(CancellationToken cancellationToken)
+    {
+        var isCanceled = await UniTask.Delay(TimeSpan.FromSeconds(targetStopCheckDelaySeconds), cancellationToken: cancellationToken)
+            .SuppressCancellationThrow();
+        if (isCanceled)
+        {
+            return;
+        }
+
+        var stableSeconds = 0.0f;
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            if (AreAllTargetsStopped())
+            {
+                stableSeconds += Time.fixedDeltaTime;
+                if (stableSeconds >= targetStopStableSeconds)
+                {
+                    AllTargetsStoppedSubject.OnNext(this);
+                    return;
+                }
+            }
+            else
+            {
+                stableSeconds = 0.0f;
+            }
+
+            isCanceled = await UniTask.WaitForFixedUpdate(cancellationToken).SuppressCancellationThrow();
+            if (isCanceled)
+            {
+                return;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns whether all generated targets are under the stop velocity threshold.
+    /// 生成済みターゲットがすべて停止速度しきい値未満かを返します。
+    /// </summary>
+    private bool AreAllTargetsStopped()
+    {
+        foreach (Transform child in this.gameObject.transform)
+        {
+            var target = child.GetComponent<Target>();
+            if (target != null && target.IsMoving(targetStopVelocityThreshold))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

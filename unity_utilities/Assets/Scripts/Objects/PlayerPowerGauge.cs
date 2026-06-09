@@ -12,6 +12,7 @@ public class PlayerPowerGauge : MonoBehaviour
 
     private RectTransform fillRectTransform;
     private float elapsedTime;
+    private GameObject canvasObject;
 
     public float PowerRate { get; private set; } = 0.5f;
 
@@ -22,6 +23,7 @@ public class PlayerPowerGauge : MonoBehaviour
     void Start()
     {
         CreateGaugeUI();
+        SetVisible(false);
         SetUpdateGauge();
     }
 
@@ -31,7 +33,7 @@ public class PlayerPowerGauge : MonoBehaviour
     /// </summary>
     private void CreateGaugeUI()
     {
-        var canvasObject = new GameObject("PowerGaugeCanvas");
+        canvasObject = new GameObject("PowerGaugeCanvas");
         canvasObject.transform.SetParent(this.transform, false);
 
         var canvas = canvasObject.AddComponent<Canvas>();
@@ -86,5 +88,17 @@ public class PlayerPowerGauge : MonoBehaviour
                 }
             })
             .AddTo(this);
+    }
+
+    /// <summary>
+    /// Changes whether the launch power gauge is visible.
+    /// 発射パワーゲージの表示状態を切り替えます。
+    /// </summary>
+    public void SetVisible(bool visible)
+    {
+        if (canvasObject != null)
+        {
+            canvasObject.SetActive(visible);
+        }
     }
 }
