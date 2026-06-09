@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using R3;
 
 public class PlayerPowerGauge : MonoBehaviour
@@ -8,7 +7,13 @@ public class PlayerPowerGauge : MonoBehaviour
     private float gaugeCycleSeconds = 1.5f;
 
     [SerializeField]
-    private Vector2 gaugeSize = new Vector2(28.0f, 240.0f);
+    private Canvas gaugeCanvas;
+
+    [SerializeField]
+    private RectTransform gaugeBackgroundRectTransform;
+
+    [SerializeField]
+    private RectTransform fillRectTransform;
 
     // Adds a secondary wave to make the gauge motion less regular.
     // Increase to make the gauge more unpredictable. Decrease to make it closer to a simple sine wave.
@@ -31,63 +36,27 @@ public class PlayerPowerGauge : MonoBehaviour
     [SerializeField]
     private float minimumSlowdownPower = 2.2f;
 
-    private RectTransform fillRectTransform;
     private float elapsedTime;
-    private GameObject canvasObject;
 
     public float PowerRate { get; private set; } = 0.5f;
 
     /// <summary>
-    /// Creates the launch power gauge UI.
-    /// 発射パワーゲージのUIを生成します。
+    /// Hides the gauge until the player enters launch-ready state.
+    /// プレイヤーが発射準備状態になるまでゲージを非表示にします。
     /// </summary>
-    void Start()
+    void Awake()
     {
-        CreateGaugeUI();
         SetVisible(false);
-        SetUpdateGauge();
     }
 
     /// <summary>
-    /// Creates the gauge canvas and fill image at the left edge of the screen.
-    /// 画面左端にゲージ用Canvasと塗りつぶしImageを生成します。
+    /// Initializes the launch power gauge UI.
+    /// 発射パワーゲージUIを初期化します。
     /// </summary>
-    private void CreateGaugeUI()
+    void Start()
     {
-        canvasObject = new GameObject("PowerGaugeCanvas");
-        canvasObject.transform.SetParent(this.transform, false);
-
-        var canvas = canvasObject.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-
-        canvasObject.AddComponent<CanvasScaler>();
-        canvasObject.AddComponent<GraphicRaycaster>();
-
-        var backgroundObject = new GameObject("PowerGaugeBackground");
-        backgroundObject.transform.SetParent(canvasObject.transform, false);
-
-        var backgroundRectTransform = backgroundObject.AddComponent<RectTransform>();
-        backgroundRectTransform.anchorMin = new Vector2(0.0f, 0.5f);
-        backgroundRectTransform.anchorMax = new Vector2(0.0f, 0.5f);
-        backgroundRectTransform.pivot = new Vector2(0.5f, 0.5f);
-        backgroundRectTransform.anchoredPosition = new Vector2(32.0f, 0.0f);
-        backgroundRectTransform.sizeDelta = gaugeSize;
-
-        var backgroundImage = backgroundObject.AddComponent<Image>();
-        backgroundImage.color = new Color(0.05f, 0.05f, 0.05f, 0.75f);
-
-        var fillObject = new GameObject("PowerGaugeFill");
-        fillObject.transform.SetParent(backgroundObject.transform, false);
-
-        fillRectTransform = fillObject.AddComponent<RectTransform>();
-        fillRectTransform.anchorMin = new Vector2(0.0f, 0.0f);
-        fillRectTransform.anchorMax = new Vector2(1.0f, 0.0f);
-        fillRectTransform.pivot = new Vector2(0.5f, 0.0f);
-        fillRectTransform.anchoredPosition = Vector2.zero;
-        fillRectTransform.sizeDelta = new Vector2(0.0f, gaugeSize.y * PowerRate);
-
-        var fillImage = fillObject.AddComponent<Image>();
-        fillImage.color = new Color(0.2f, 0.9f, 0.35f, 0.95f);
+        SetUpdateGauge();
+        UpdateGaugeFill();
     }
 
     /// <summary>
@@ -101,13 +70,25 @@ public class PlayerPowerGauge : MonoBehaviour
             {
                 elapsedTime += Time.deltaTime;
                 PowerRate = CalculatePowerRate();
-
-                if (fillRectTransform != null)
-                {
-                    fillRectTransform.sizeDelta = new Vector2(0.0f, gaugeSize.y * PowerRate);
-                }
+                UpdateGaugeFill();
             })
             .AddTo(this);
+    }
+
+    /// <summary>
+    /// Changes the fill height to match the current power rate.
+    /// 現在のパワー割合に合わせてゲージの塗りつぶし高さを更新します。
+    /// </summary>
+    private void UpdateGaugeFill()
+    {
+        if (fillRectTransform == null || gaugeBackgroundRectTransform == null)
+        {
+            return;
+        }
+
+        var fillSize = fillRectTransform.sizeDelta;
+        fillSize.y = gaugeBackgroundRectTransform.sizeDelta.y * PowerRate;
+        fillRectTransform.sizeDelta = fillSize;
     }
 
     /// <summary>
@@ -129,9 +110,9 @@ public class PlayerPowerGauge : MonoBehaviour
     /// </summary>
     public void SetVisible(bool visible)
     {
-        if (canvasObject != null)
+        if (gaugeCanvas != null)
         {
-            canvasObject.SetActive(visible);
+            gaugeCanvas.enabled = visible;
         }
     }
 }
