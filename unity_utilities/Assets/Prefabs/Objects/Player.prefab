@@ -228,8 +228,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3c92383bd2274b9f8bb72888635e9650, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerLaunchDirectionIndicator
-  viewportPosition: {x: 0.86, y: 0.82, z: 4}
-  indicatorScale: {x: 0.08, y: 0.08, z: 1.2}
+  panelAnchoredPosition: {x: -120, y: -88}
+  panelSize: {x: 180, y: 150}
+  directionLineSize: {x: 10, y: 92}
+  pitchGaugeSize: {x: 10, y: 88}
   indicatorColor: {r: 0.95, g: 0.95, b: 0.35, a: 1}
-  angleTextAnchoredPosition: {x: -128, y: -108}
-  angleTextSize: {x: 240, y: 48}
+  baseLineColor: {r: 1, g: 1, b: 1, a: 0.45}
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  angleTextFontSize: 16
+  minVerticalDisplayAngle: -45
+  maxVerticalDisplayAngle: 45
