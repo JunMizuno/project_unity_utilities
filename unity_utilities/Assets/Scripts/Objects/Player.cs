@@ -6,6 +6,8 @@ public class Player : MonoBehaviour
 {
     public static readonly Subject<Player> LaunchedSubject = new Subject<Player>();
 
+    public static readonly Subject<Target> HitTargetSubject = new Subject<Target>();
+
     [SerializeField]
     private Rigidbody rigidBody;
 
@@ -29,6 +31,8 @@ public class Player : MonoBehaviour
     private Vector3 initialLocalPosition;
 
     private Quaternion initialLocalRotation;
+
+    private bool hasHitTarget;
 
     /// <summary>
     /// Caches required components and prepares the runtime-only ball material.
@@ -95,9 +99,31 @@ public class Player : MonoBehaviour
         rigidBody.useGravity = true;
         rigidBody.mass = 1.0f;
         SetPlayerAlpha(launchedAlpha);
+        hasHitTarget = false;
         LaunchedSubject.OnNext(this);
         var launchForce = Mathf.Lerp(minLaunchForce, maxLaunchForce, Mathf.Clamp01(powerRate));
         rigidBody.AddForce(launchDirection.normalized * launchForce, ForceMode.Impulse);
+    }
+
+    /// <summary>
+    /// Notifies when the player ball first collides with a target after launch.
+    /// 発射後にプレイヤーボールが最初にターゲットへ衝突したことを通知します。
+    /// </summary>
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (hasHitTarget)
+        {
+            return;
+        }
+
+        var target = collision.collider.GetComponentInParent<Target>();
+        if (target == null)
+        {
+            return;
+        }
+
+        hasHitTarget = true;
+        HitTargetSubject.OnNext(target);
     }
 
     /// <summary>

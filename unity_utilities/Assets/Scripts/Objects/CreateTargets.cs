@@ -31,6 +31,14 @@ public class CreateTargets : MonoBehaviour
             .Subscribe(_ =>
             {
                 isLaunchStarted = true;
+                SetTargetPhysicsEnabled(false);
+            })
+            .AddTo(this);
+
+        Player.HitTargetSubject
+            .Where(target => target != null && target.transform.IsChildOf(transform))
+            .Subscribe(_ =>
+            {
                 SetTargetPhysicsEnabled(true);
             })
             .AddTo(this);
