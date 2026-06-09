@@ -160,6 +160,9 @@ MonoBehaviour:
   rigidBody: {fileID: 613684371702463959}
   minLaunchForce: 10
   maxLaunchForce: 30
+  playerRenderer: {fileID: 4301862005896035645}
+  readyAlpha: 0.35
+  launchedAlpha: 1
 --- !u!114 &3876873311603251431
 MonoBehaviour:
   m_ObjectHideFlags: 0
