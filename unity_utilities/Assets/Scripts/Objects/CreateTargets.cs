@@ -15,15 +15,31 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     private float layerFixIntervalSeconds = 0.2f;
 
+    // Minimum additional force applied when the ball hits targets with weak launch power.
+    // Increase to make even weak shots scatter blocks more. Decrease to keep weak shots calmer.
+    // 弱い発射威力でターゲットに当たったときに加える追加の最小衝撃力です。
+    // 上げると弱いショットでもブロックが散りやすくなり、下げると弱いショットの動きが控えめになります。
     [SerializeField]
     private float minImpactExplosionForce = 4.0f;
 
+    // Maximum additional force applied when the ball hits targets with strong launch power.
+    // Increase to make full-power shots blast blocks farther. Decrease to reduce strong-shot scattering.
+    // 強い発射威力でターゲットに当たったときに加える追加の最大衝撃力です。
+    // 上げると最大威力ショットでブロックがより遠くへ飛び、下げると強いショットの散らばりが抑えられます。
     [SerializeField]
     private float maxImpactExplosionForce = 18.0f;
 
+    // Radius around the hit point that receives the additional impact force.
+    // Increase to affect more blocks. Decrease to focus force around the first contact point.
+    // 接触点から追加衝撃力が届く範囲です。
+    // 上げるとより多くのブロックに力が届き、下げると最初に当たった周辺だけへ力が集中します。
     [SerializeField]
     private float impactExplosionRadius = 3.0f;
 
+    // Upward lift added to the impact force.
+    // Increase to pop blocks upward more. Decrease to keep movement flatter along the field.
+    // 追加衝撃力に含める上方向の持ち上げ量です。
+    // 上げるとブロックが上へ跳ねやすくなり、下げるとフィールド上を横方向に動きやすくなります。
     [SerializeField]
     private float impactExplosionUpwardsModifier = 0.35f;
 
