@@ -197,6 +197,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerPowerGauge
   gaugeCycleSeconds: 1.5
   gaugeSize: {x: 28, y: 240}
+  irregularWaveAmount: 0.12
+  irregularWaveMultiplier: 2.7
+  minimumSlowdownPower: 2.2
 --- !u!114 &7043201741639774812
 MonoBehaviour:
   m_ObjectHideFlags: 0
