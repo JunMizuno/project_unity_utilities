@@ -26,7 +26,7 @@ public class CreateTargets : MonoBehaviour
     // 最初のターゲット生成を開始するまでの待ち時間です。
     // 上げるとブロック配置開始が遅くなり、下げると早く開始されます。
     [SerializeField]
-    private float initialCreateDelaySeconds = 0.2f;
+    private float initialCreateDelaySeconds = 0.05f;
 
     // Minimum additional force applied when the ball hits targets with weak launch power.
     // Increase to make even weak shots scatter blocks more. Decrease to keep weak shots calmer.
