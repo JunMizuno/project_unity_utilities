@@ -77,6 +77,16 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     private float targetStopStableSeconds = 0.5f;
 
+    [SerializeField]
+    private Camera mainCamera;
+
+    // Viewport padding used when deciding which blocks remain on screen for stop checks.
+    // Increase to keep near-edge blocks in the stop check longer. Decrease to ignore offscreen blocks sooner.
+    // 停止判定で「画面上に残っている」とみなす表示範囲の余白です。
+    // 上げると画面端付近のブロックを長く判定対象にし、下げると画面外ブロックを早く除外します。
+    [SerializeField]
+    private float targetStopViewportPadding = 0.05f;
+
     private bool trigger = default;
 
     private readonly List<List<Target>> targetLayers = new List<List<Target>>();
@@ -91,6 +101,11 @@ public class CreateTargets : MonoBehaviour
     /// </summary>
     void Awake()
     {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
         if (!Instances.Contains(this))
         {
             Instances.Add(this);
@@ -367,15 +382,20 @@ public class CreateTargets : MonoBehaviour
     }
 
     /// <summary>
-    /// Returns whether all generated targets are under the stop velocity threshold.
-    /// 生成済みターゲットがすべて停止速度しきい値未満かを返します。
+    /// Returns whether all on-screen generated targets are under the stop velocity threshold.
+    /// 画面上に残っている生成済みターゲットがすべて停止速度しきい値未満かを返します。
     /// </summary>
     private bool AreAllTargetsStopped()
     {
         foreach (Transform child in this.gameObject.transform)
         {
             var target = child.GetComponent<Target>();
-            if (target != null && target.IsMoving(targetStopVelocityThreshold))
+            if (target == null || !IsTargetInStopCheckView(target))
+            {
+                continue;
+            }
+
+            if (target.IsMoving(targetStopVelocityThreshold))
             {
                 return false;
             }
@@ -385,8 +405,8 @@ public class CreateTargets : MonoBehaviour
     }
 
     /// <summary>
-    /// Returns whether every generated target in the scene has stopped moving.
-    /// シーン内で生成済みのすべてのターゲットが停止しているかを返します。
+    /// Returns whether every on-screen generated target in the scene has stopped moving.
+    /// シーン内で画面上に残っている生成済みターゲットが停止しているかを返します。
     /// </summary>
     public static bool AreAllGeneratedTargetsStopped()
     {
@@ -406,6 +426,20 @@ public class CreateTargets : MonoBehaviour
         }
 
         return hasGeneratedTarget;
+    }
+
+    /// <summary>
+    /// Returns whether the target should be included in stop checks.
+    /// 対象ターゲットを停止判定に含めるべきかを返します。
+    /// </summary>
+    private bool IsTargetInStopCheckView(Target target)
+    {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        return target.IsInCameraView(mainCamera, targetStopViewportPadding);
     }
 
     /// <summary>
