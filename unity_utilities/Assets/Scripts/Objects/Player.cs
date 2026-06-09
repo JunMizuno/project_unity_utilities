@@ -40,6 +40,8 @@ public class Player : MonoBehaviour
 
     private Quaternion initialLocalRotation;
 
+    private Vector3 initialLocalScale;
+
     private bool hasHitTarget;
 
     private float currentPowerRate;
@@ -71,6 +73,7 @@ public class Player : MonoBehaviour
 
         initialLocalPosition = transform.localPosition;
         initialLocalRotation = transform.localRotation;
+        initialLocalScale = transform.localScale;
     }
 
     /// <summary>
@@ -185,6 +188,7 @@ public class Player : MonoBehaviour
     {
         transform.localPosition = initialLocalPosition;
         transform.localRotation = initialLocalRotation;
+        transform.localScale = initialLocalScale;
 
         if (rigidBody == null)
         {

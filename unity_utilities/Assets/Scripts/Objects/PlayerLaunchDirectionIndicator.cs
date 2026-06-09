@@ -23,6 +23,8 @@ public class PlayerLaunchDirectionIndicator : MonoBehaviour
 
     private float initialPitchKnobY;
 
+    private CanvasGroup canvasGroup;
+
     /// <summary>
     /// Caches the scene-adjusted pitch knob position.
     /// シーン上で調整した上下角度ノブの初期位置を保持します。
@@ -32,6 +34,12 @@ public class PlayerLaunchDirectionIndicator : MonoBehaviour
         if (pitchKnobRect != null)
         {
             initialPitchKnobY = pitchKnobRect.anchoredPosition.y;
+        }
+
+        canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
     }
 
@@ -88,6 +96,13 @@ public class PlayerLaunchDirectionIndicator : MonoBehaviour
     /// </summary>
     public void SetVisible(bool visible)
     {
-        gameObject.SetActive(visible);
+        if (canvasGroup == null)
+        {
+            return;
+        }
+
+        canvasGroup.alpha = visible ? 1.0f : 0.0f;
+        canvasGroup.interactable = visible;
+        canvasGroup.blocksRaycasts = visible;
     }
 }
