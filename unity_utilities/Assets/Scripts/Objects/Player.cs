@@ -26,6 +26,10 @@ public class Player : MonoBehaviour
 
     private Material runtimeMaterial;
 
+    private Vector3 initialLocalPosition;
+
+    private Quaternion initialLocalRotation;
+
     /// <summary>
     /// Caches required components and prepares the runtime-only ball material.
     /// 必要なコンポーネントを保持し、実行時専用のボールマテリアルを準備します。
@@ -46,6 +50,9 @@ public class Player : MonoBehaviour
         {
             runtimeMaterial = playerRenderer.material;
         }
+
+        initialLocalPosition = transform.localPosition;
+        initialLocalRotation = transform.localRotation;
     }
 
     /// <summary>
@@ -58,8 +65,8 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Applies forward impulse from the current player ball position.
-    /// 現在のプレイヤーボール位置から前方への力を加えます。
+    /// Restores the player ball to the initial position and applies forward impulse.
+    /// プレイヤーボールを初期位置へ戻し、前方への力を加えます。
     /// </summary>
     public void AddForceToPlayer()
     {
@@ -67,8 +74,8 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Applies forward impulse from the current player ball position based on the power rate.
-    /// パワー割合に応じて現在のプレイヤーボール位置から前方への力を加えます。
+    /// Restores the player ball to the initial position and applies forward impulse based on the power rate.
+    /// パワー割合に応じてプレイヤーボールを初期位置へ戻し、前方への力を加えます。
     /// </summary>
     public void AddForceToPlayer(float powerRate)
     {
@@ -76,11 +83,12 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Applies impulse in the specified direction from the current player ball position.
-    /// 現在のプレイヤーボール位置から指定した方向へ力を加えます。
+    /// Restores the player ball to the initial position and applies impulse in the specified direction.
+    /// プレイヤーボールを初期位置へ戻し、指定した方向へ力を加えます。
     /// </summary>
     public void AddForceToPlayer(float powerRate, Vector3 launchDirection)
     {
+        ResetPlayerTransformToInitialPosition();
         this.gameObject.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
         rigidBody.linearVelocity = Vector3.zero;
         rigidBody.angularVelocity = Vector3.zero;
@@ -90,6 +98,24 @@ public class Player : MonoBehaviour
         LaunchedSubject.OnNext(this);
         var launchForce = Mathf.Lerp(minLaunchForce, maxLaunchForce, Mathf.Clamp01(powerRate));
         rigidBody.AddForce(launchDirection.normalized * launchForce, ForceMode.Impulse);
+    }
+
+    /// <summary>
+    /// Restores the player ball to the initial scene placement before launching.
+    /// 発射前にプレイヤーボールをシーン上の初期配置へ戻します。
+    /// </summary>
+    private void ResetPlayerTransformToInitialPosition()
+    {
+        transform.localPosition = initialLocalPosition;
+        transform.localRotation = initialLocalRotation;
+
+        if (rigidBody == null)
+        {
+            return;
+        }
+
+        rigidBody.position = transform.position;
+        rigidBody.rotation = transform.rotation;
     }
 
     /// <summary>
