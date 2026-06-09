@@ -34,6 +34,20 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float offscreenViewportPadding = 0.15f;
 
+    // Velocity threshold used to judge that the launched ball is no longer likely to hit targets.
+    // Increase to treat slow movement as finished sooner. Decrease to wait for the ball to slow down more.
+    // 発射後のボールがこれ以上ターゲットへ当たりにくいと判定する速度しきい値です。
+    // 上げると低速の段階で終了扱いになり、下げるとより停止に近い状態まで待ちます。
+    [SerializeField]
+    private float returnBallVelocityThreshold = 0.08f;
+
+    // Duration the ball must remain under the velocity threshold before it can return.
+    // Increase to avoid returning during brief slowdowns. Decrease to return sooner after the ball stalls.
+    // ボールが速度しきい値未満を維持する必要がある時間です。
+    // 上げると一瞬の減速では戻りにくくなり、下げると失速後に早く戻ります。
+    [SerializeField]
+    private float returnBallStableSeconds = 0.5f;
+
     private Material runtimeMaterial;
 
     private Vector3 initialLocalPosition;
@@ -47,6 +61,8 @@ public class Player : MonoBehaviour
     private float currentPowerRate;
 
     private bool isLaunched;
+
+    private float ballStoppedSeconds;
 
     public bool IsReady { get; private set; }
 
@@ -91,7 +107,7 @@ public class Player : MonoBehaviour
         CreateTargets.AllTargetsStoppedSubject
             .Subscribe(_ =>
             {
-                if (isLaunched)
+                if (CanReturnToLaunchReady())
                 {
                     SetLaunchReady(true);
                 }
@@ -100,12 +116,14 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Checks whether the launched player ball left the camera view.
-    /// 発射後のプレイヤーボールがカメラ表示外へ出たか確認します。
+    /// Checks whether the ball and targets satisfy the return conditions.
+    /// ボールとターゲットが復帰条件を満たしているか確認します。
     /// </summary>
     private void Update()
     {
-        if (!isLaunched || !IsPlayerOffscreen())
+        UpdateBallStoppedSeconds();
+
+        if (!CanReturnToLaunchReady())
         {
             return;
         }
@@ -151,6 +169,7 @@ public class Player : MonoBehaviour
         rigidBody.mass = 1.0f;
         SetPlayerAlpha(launchedAlpha);
         hasHitTarget = false;
+        ballStoppedSeconds = 0.0f;
         currentPowerRate = Mathf.Clamp01(powerRate);
         isLaunched = true;
         LaunchedSubject.OnNext(this);
@@ -207,6 +226,7 @@ public class Player : MonoBehaviour
     {
         IsReady = ready;
         isLaunched = false;
+        ballStoppedSeconds = 0.0f;
 
         if (ready)
         {
@@ -227,6 +247,61 @@ public class Player : MonoBehaviour
         }
 
         ReadyStateChangedSubject.OnNext(new PlayerReadyState(this, ready));
+    }
+
+    /// <summary>
+    /// Returns whether all blocks are stopped and the launched ball can safely return.
+    /// すべてのブロックが停止し、発射後のボールを安全に戻せるかを返します。
+    /// </summary>
+    private bool CanReturnToLaunchReady()
+    {
+        if (!isLaunched || !CreateTargets.AreAllGeneratedTargetsStopped())
+        {
+            return false;
+        }
+
+        return IsPlayerOffscreen() || IsPlayerNearlyStopped();
+    }
+
+    /// <summary>
+    /// Accumulates how long the launched ball has remained nearly stopped.
+    /// 発射後のボールがほぼ停止した状態を維持している時間を積算します。
+    /// </summary>
+    private void UpdateBallStoppedSeconds()
+    {
+        if (!isLaunched || rigidBody == null)
+        {
+            ballStoppedSeconds = 0.0f;
+            return;
+        }
+
+        if (IsPlayerVelocityUnderReturnThreshold())
+        {
+            ballStoppedSeconds += Time.deltaTime;
+            return;
+        }
+
+        ballStoppedSeconds = 0.0f;
+    }
+
+    /// <summary>
+    /// Returns whether the launched ball has been nearly stopped long enough.
+    /// 発射後のボールが十分な時間ほぼ停止しているかを返します。
+    /// </summary>
+    private bool IsPlayerNearlyStopped()
+    {
+        return ballStoppedSeconds >= returnBallStableSeconds;
+    }
+
+    /// <summary>
+    /// Returns whether the player ball velocity is under the return threshold.
+    /// プレイヤーボールの速度が復帰用しきい値未満かを返します。
+    /// </summary>
+    private bool IsPlayerVelocityUnderReturnThreshold()
+    {
+        var velocityThreshold = returnBallVelocityThreshold * returnBallVelocityThreshold;
+        return rigidBody.linearVelocity.sqrMagnitude <= velocityThreshold
+            && rigidBody.angularVelocity.sqrMagnitude <= velocityThreshold;
     }
 
     /// <summary>

@@ -11,6 +11,8 @@ public class CreateTargets : MonoBehaviour
 
     public static readonly Subject<CreateTargets> AllTargetsStoppedSubject = new Subject<CreateTargets>();
 
+    private static readonly List<CreateTargets> Instances = new List<CreateTargets>();
+
     [SerializeField]
     GameObject targetPrefab;
 
@@ -84,6 +86,18 @@ public class CreateTargets : MonoBehaviour
     private bool isTargetPhysicsReleased;
 
     /// <summary>
+    /// Registers this target generator for global target movement checks.
+    /// 全体のターゲット停止判定に使うため、この生成器を登録します。
+    /// </summary>
+    void Awake()
+    {
+        if (!Instances.Contains(this))
+        {
+            Instances.Add(this);
+        }
+    }
+
+    /// <summary>
     /// Starts the initial target generation behavior.
     /// ターゲットを最初に一度だけ生成する処理を開始します。
     /// </summary>
@@ -123,6 +137,15 @@ public class CreateTargets : MonoBehaviour
                 SettleTargetLayersAsync(this.GetCancellationTokenOnDestroy()).Forget();
             })
             .AddTo(this);
+    }
+
+    /// <summary>
+    /// Unregisters this target generator from global target movement checks.
+    /// 全体のターゲット停止判定からこの生成器を解除します。
+    /// </summary>
+    void OnDestroy()
+    {
+        Instances.Remove(this);
     }
 
     /// <summary>
@@ -359,5 +382,46 @@ public class CreateTargets : MonoBehaviour
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Returns whether every generated target in the scene has stopped moving.
+    /// シーン内で生成済みのすべてのターゲットが停止しているかを返します。
+    /// </summary>
+    public static bool AreAllGeneratedTargetsStopped()
+    {
+        var hasGeneratedTarget = false;
+        foreach (var instance in Instances)
+        {
+            if (instance == null || !instance.HasGeneratedTarget())
+            {
+                continue;
+            }
+
+            hasGeneratedTarget = true;
+            if (!instance.AreAllTargetsStopped())
+            {
+                return false;
+            }
+        }
+
+        return hasGeneratedTarget;
+    }
+
+    /// <summary>
+    /// Returns whether this generator currently owns generated targets.
+    /// この生成器が現在ターゲットを保持しているかを返します。
+    /// </summary>
+    private bool HasGeneratedTarget()
+    {
+        foreach (Transform child in this.gameObject.transform)
+        {
+            if (child.GetComponent<Target>() != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
