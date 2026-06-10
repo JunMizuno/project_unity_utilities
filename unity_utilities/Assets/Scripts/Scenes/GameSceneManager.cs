@@ -6,8 +6,12 @@ public class GameSceneManager : MonoBehaviour
 {
     public static GameSceneManager Instance { get; private set; }
 
+    // Temporary in-game development setting.
+    // Restore this to SceneControl.SCENE_NUM.Title when the title flow is needed again.
+    // インゲーム実装確認用の一時設定です。
+    // タイトル導線を戻すときは SceneControl.SCENE_NUM.Title に戻してください。
     [SerializeField]
-    private SceneControl.SCENE_NUM initialScene = SceneControl.SCENE_NUM.Title;
+    private SceneControl.SCENE_NUM initialScene = SceneControl.SCENE_NUM.GameMain;
 
     private SceneControl.SCENE_NUM currentContentScene = SceneControl.SCENE_NUM.None;
 
