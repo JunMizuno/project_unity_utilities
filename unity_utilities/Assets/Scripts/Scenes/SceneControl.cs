@@ -8,12 +8,12 @@
     {
         None = -1,
         GameControl = 0,
-        Test,
+        GameMain,
     }
 
     public static readonly string[] SceneNames = {
         "None",
         "GameControl",
-        "Test",
+        "GameMain",
     };
 }

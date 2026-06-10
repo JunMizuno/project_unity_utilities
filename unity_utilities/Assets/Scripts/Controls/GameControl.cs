@@ -49,7 +49,7 @@ public class GameControl : MonoBehaviour
     /// </summary>
     public void Start()
     {
-        SceneManager.LoadSceneAsync((int)SceneControl.SCENE_NUM.Test, LoadSceneMode.Single);
+        SceneManager.LoadSceneAsync((int)SceneControl.SCENE_NUM.GameMain, LoadSceneMode.Single);
 
         SetCalcFPS();
     }
