@@ -335,6 +335,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fab90c69f38a514449c72965b6e47dd8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EffectControl
+  postEffectControl: {fileID: 114661022}
+  objectEffectControl: {fileID: 876597854}
+  fieldEffectControl: {fileID: 2147312484}
 --- !u!1 &512571089
 GameObject:
   m_ObjectHideFlags: 0
