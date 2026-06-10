@@ -9,7 +9,6 @@ public class GameControl : MonoBehaviour
     private TextMeshProUGUI fpsText;
 
     private static GameControl instance;
-    private static readonly string CLASS_NAME = "GameControlScene";
 
     /// <summary>
     /// Ensures that the GameControl scene is loaded first when play mode starts from another scene in the Unity Editor.
@@ -19,9 +18,10 @@ public class GameControl : MonoBehaviour
     public static void FirstLoad()
     {
 #if UNITY_EDITOR
-        if (string.Compare(SceneManager.GetActiveScene().name, CLASS_NAME, System.StringComparison.CurrentCulture) != 0)
+        var gameControlSceneName = SceneControl.GetSceneName(SceneControl.SCENE_NUM.GameControl);
+        if (string.Compare(SceneManager.GetActiveScene().name, gameControlSceneName, System.StringComparison.CurrentCulture) != 0)
         {
-            SceneManager.LoadScene(CLASS_NAME);
+            SceneManager.LoadScene(gameControlSceneName);
         }
 #endif
     }
@@ -44,13 +44,11 @@ public class GameControl : MonoBehaviour
     }
 
     /// <summary>
-    /// Loads the first playable scene and starts the FPS display update.
-    /// 最初にプレイするシーンを読み込み、FPS表示の更新を開始します。
+    /// Starts the FPS display update.
+    /// FPS表示の更新を開始します。
     /// </summary>
     public void Start()
     {
-        SceneManager.LoadSceneAsync((int)SceneControl.SCENE_NUM.GameMain, LoadSceneMode.Single);
-
         SetCalcFPS();
     }
 
