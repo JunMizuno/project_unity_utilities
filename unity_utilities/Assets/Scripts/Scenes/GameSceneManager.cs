@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using Cysharp.Threading.Tasks;
 
 public class GameSceneManager : MonoBehaviour
 {
@@ -7,6 +8,8 @@ public class GameSceneManager : MonoBehaviour
 
     [SerializeField]
     private SceneControl.SCENE_NUM initialScene = SceneControl.SCENE_NUM.Title;
+
+    private SceneControl.SCENE_NUM currentContentScene = SceneControl.SCENE_NUM.None;
 
     private bool isLoading;
 
@@ -27,8 +30,8 @@ public class GameSceneManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Loads the initial scene after the persistent game control scene starts.
-    /// 永続化するゲーム管理シーンの開始後に初期シーンを読み込みます。
+    /// Loads the initial content scene after the game control scene starts.
+    /// ゲーム管理シーンの開始後に初期コンテンツシーンを読み込みます。
     /// </summary>
     void Start()
     {
@@ -66,8 +69,8 @@ public class GameSceneManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Loads the requested scene by build index.
-    /// 指定したシーン番号のシーンをBuild Settingsの番号で読み込みます。
+    /// Starts loading the requested content scene.
+    /// 指定したコンテンツシーンの読み込みを開始します。
     /// </summary>
     public void LoadScene(SceneControl.SCENE_NUM scene)
     {
@@ -76,14 +79,83 @@ public class GameSceneManager : MonoBehaviour
             return;
         }
 
+        LoadSceneAsync(scene).Forget();
+    }
+
+    /// <summary>
+    /// Loads a content scene additively and unloads the previous content scene.
+    /// コンテンツシーンを加算読み込みし、直前のコンテンツシーンをアンロードします。
+    /// </summary>
+    private async UniTaskVoid LoadSceneAsync(SceneControl.SCENE_NUM scene)
+    {
         isLoading = true;
-        var asyncOperation = SceneManager.LoadSceneAsync((int)scene, LoadSceneMode.Single);
-        if (asyncOperation == null)
+        try
+        {
+            var sceneName = SceneControl.GetSceneName(scene);
+            if (string.IsNullOrEmpty(sceneName))
+            {
+                return;
+            }
+
+            var previousContentScene = currentContentScene;
+            var loadedScene = SceneManager.GetSceneByName(sceneName);
+            if (!loadedScene.IsValid() || !loadedScene.isLoaded)
+            {
+                var loadOperation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+                if (loadOperation == null)
+                {
+                    return;
+                }
+
+                await loadOperation.ToUniTask();
+                loadedScene = SceneManager.GetSceneByName(sceneName);
+            }
+
+            if (loadedScene.IsValid())
+            {
+                SceneManager.SetActiveScene(loadedScene);
+            }
+
+            currentContentScene = scene;
+            await UnloadPreviousContentSceneAsync(previousContentScene, scene);
+        }
+        finally
         {
             isLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Unloads the previous content scene while keeping the game control scene alive.
+    /// ゲーム管理シーンを残したまま、直前のコンテンツシーンをアンロードします。
+    /// </summary>
+    private async UniTask UnloadPreviousContentSceneAsync(
+        SceneControl.SCENE_NUM previousScene,
+        SceneControl.SCENE_NUM nextScene)
+    {
+        if (previousScene == SceneControl.SCENE_NUM.None
+            || previousScene == nextScene
+            || previousScene == SceneControl.SCENE_NUM.GameControl)
+        {
             return;
         }
 
-        asyncOperation.completed += _ => isLoading = false;
+        var previousSceneName = SceneControl.GetSceneName(previousScene);
+        if (string.IsNullOrEmpty(previousSceneName))
+        {
+            return;
+        }
+
+        var loadedPreviousScene = SceneManager.GetSceneByName(previousSceneName);
+        if (!loadedPreviousScene.IsValid() || !loadedPreviousScene.isLoaded)
+        {
+            return;
+        }
+
+        var unloadOperation = SceneManager.UnloadSceneAsync(loadedPreviousScene);
+        if (unloadOperation != null)
+        {
+            await unloadOperation.ToUniTask();
+        }
     }
 }

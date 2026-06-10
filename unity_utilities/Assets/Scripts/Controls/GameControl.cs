@@ -27,13 +27,11 @@ public class GameControl : MonoBehaviour
     }
 
     /// <summary>
-    /// Initializes the persistent game controller and applies the target frame rate.
-    /// 永続化するゲーム管理オブジェクトを初期化し、目標フレームレートを設定します。
+    /// Initializes the game controller and applies the target frame rate.
+    /// ゲーム管理オブジェクトを初期化し、目標フレームレートを設定します。
     /// </summary>
     public void Awake()
     {
-        DontDestroyOnLoad(this.gameObject);
-
         if (!this.enabled)
         {
             return;
