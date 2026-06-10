@@ -28,6 +28,8 @@ public class SimpleBlobShadow : MonoBehaviour
 
     private Mesh shadowMesh;
 
+    private bool isVisible = true;
+
     /// <summary>
     /// Creates the runtime shadow object.
     /// 実行時に使用する影オブジェクトを生成します。
@@ -61,6 +63,12 @@ public class SimpleBlobShadow : MonoBehaviour
             return;
         }
 
+        if (!isVisible)
+        {
+            shadowTransform.gameObject.SetActive(false);
+            return;
+        }
+
         var height = Mathf.Max(0.0f, transform.position.y - groundY);
         var visibleRate = 1.0f - Mathf.Clamp01(height / maxVisibleHeight);
         var alpha = Mathf.Lerp(minAlpha, maxAlpha, visibleRate);
@@ -73,6 +81,19 @@ public class SimpleBlobShadow : MonoBehaviour
         color.a = alpha;
         shadowMaterial.SetColor("_BaseColor", color);
         shadowTransform.gameObject.SetActive(alpha > 0.01f);
+    }
+
+    /// <summary>
+    /// Changes whether the generated blob shadow is visible.
+    /// 生成した丸影の表示状態を切り替えます。
+    /// </summary>
+    public void SetVisible(bool visible)
+    {
+        isVisible = visible;
+        if (!visible && shadowTransform != null)
+        {
+            shadowTransform.gameObject.SetActive(false);
+        }
     }
 
     /// <summary>

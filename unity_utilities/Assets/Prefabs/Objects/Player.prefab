@@ -159,6 +159,7 @@ MonoBehaviour:
   minLaunchForce: 10
   maxLaunchForce: 30
   playerRenderer: {fileID: 4301862005896035645}
+  blobShadow: {fileID: 7043201741639774812}
   readyAlpha: 0.35
   launchedAlpha: 1
 --- !u!114 &3876873311603251431

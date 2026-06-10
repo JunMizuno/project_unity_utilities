@@ -23,6 +23,9 @@ public class Player : MonoBehaviour
     private MeshRenderer playerRenderer;
 
     [SerializeField]
+    private SimpleBlobShadow blobShadow;
+
+    [SerializeField]
     private float readyAlpha = 0.35f;
 
     [SerializeField]
@@ -82,6 +85,11 @@ public class Player : MonoBehaviour
             playerRenderer = GetComponent<MeshRenderer>();
         }
 
+        if (blobShadow == null)
+        {
+            blobShadow = GetComponent<SimpleBlobShadow>();
+        }
+
         if (playerRenderer != null)
         {
             runtimeMaterial = playerRenderer.material;
@@ -93,12 +101,13 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Applies the pre-launch transparent visual.
-    /// 発射前の透過表示を適用します。
+    /// Hides the ball until target placement completes.
+    /// ターゲット配置が完了するまでボールを非表示にします。
     /// </summary>
     private void Start()
     {
         SetLaunchReady(false);
+        SetPlayerVisible(false);
 
         CreateTargets.TargetPlacementCompletedSubject
             .Subscribe(_ => SetLaunchReady(true))
@@ -167,6 +176,7 @@ public class Player : MonoBehaviour
         rigidBody.angularVelocity = Vector3.zero;
         rigidBody.useGravity = true;
         rigidBody.mass = 1.0f;
+        SetPlayerVisible(true);
         SetPlayerAlpha(launchedAlpha);
         hasHitTarget = false;
         ballStoppedSeconds = 0.0f;
@@ -230,6 +240,7 @@ public class Player : MonoBehaviour
 
         if (ready)
         {
+            SetPlayerVisible(true);
             ResetPlayerTransformToInitialPosition();
             if (rigidBody != null)
             {
@@ -247,6 +258,23 @@ public class Player : MonoBehaviour
         }
 
         ReadyStateChangedSubject.OnNext(new PlayerReadyState(this, ready));
+    }
+
+    /// <summary>
+    /// Changes whether the player ball and its blob shadow are visible.
+    /// プレイヤーボール本体と丸影の表示状態を切り替えます。
+    /// </summary>
+    private void SetPlayerVisible(bool visible)
+    {
+        if (playerRenderer != null)
+        {
+            playerRenderer.enabled = visible;
+        }
+
+        if (blobShadow != null)
+        {
+            blobShadow.SetVisible(visible);
+        }
     }
 
     /// <summary>
