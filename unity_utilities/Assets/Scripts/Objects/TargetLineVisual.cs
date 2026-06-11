@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 
+using UnityEngine.Serialization;
+
 public class TargetLineVisual : MonoBehaviour
 {
     [SerializeField]
@@ -23,8 +25,9 @@ public class TargetLineVisual : MonoBehaviour
     [SerializeField]
     private Color baseLeftColor = new Color(0.75f, 0.2f, 1.0f, 1.0f);
 
+    [FormerlySerializedAs("apexColor")]
     [SerializeField]
-    private Color apexColor = new Color(1.0f, 0.92f, 0.98f, 1.0f);
+    private Color topColor = new Color(1.0f, 0.92f, 0.98f, 1.0f);
 
     private static Material sharedLineMaterial;
     private static Material sharedBodyMaterial;
@@ -32,8 +35,8 @@ public class TargetLineVisual : MonoBehaviour
     private MaterialPropertyBlock bodyMaterialPropertyBlock;
 
     /// <summary>
-    /// Builds the square pyramid line visual.
-    /// 正四角錐のライン表示を構築します。
+    /// Builds the square prism line visual.
+    /// 正四角柱のライン表示を構築します。
     /// </summary>
     void Awake()
     {
@@ -55,8 +58,8 @@ public class TargetLineVisual : MonoBehaviour
     }
 
     /// <summary>
-    /// Creates the solid square pyramid body so back-side lines are hidden by depth.
-    /// 奥側のラインが透けて見えすぎないよう、正四角錐の本体メッシュを生成します。
+    /// Creates the solid square prism body so back-side lines are hidden by depth.
+    /// 奥側のラインが透けて見えすぎないよう、正四角柱の本体メッシュを生成します。
     /// </summary>
     private void CreateBodyMesh()
     {
@@ -73,24 +76,34 @@ public class TargetLineVisual : MonoBehaviour
         }
 
         var halfSize = size * 0.5f;
-        var baseY = -halfSize;
+        var bottomY = -halfSize;
+        var topY = halfSize;
         var vertices = new[]
         {
-            new Vector3(-halfSize, baseY, -halfSize),
-            new Vector3(halfSize, baseY, -halfSize),
-            new Vector3(halfSize, baseY, halfSize),
-            new Vector3(-halfSize, baseY, halfSize),
-            new Vector3(0.0f, halfSize, 0.0f)
+            new Vector3(-halfSize, bottomY, -halfSize),
+            new Vector3(halfSize, bottomY, -halfSize),
+            new Vector3(halfSize, bottomY, halfSize),
+            new Vector3(-halfSize, bottomY, halfSize),
+            new Vector3(-halfSize, topY, -halfSize),
+            new Vector3(halfSize, topY, -halfSize),
+            new Vector3(halfSize, topY, halfSize),
+            new Vector3(-halfSize, topY, halfSize)
         };
 
         var triangles = new[]
         {
-            0, 2, 1,
-            0, 3, 2,
-            0, 1, 4,
-            1, 2, 4,
-            2, 3, 4,
-            3, 0, 4
+            0, 4, 5,
+            0, 5, 1,
+            1, 5, 6,
+            1, 6, 2,
+            2, 6, 7,
+            2, 7, 3,
+            3, 7, 4,
+            3, 4, 0,
+            4, 7, 6,
+            4, 6, 5,
+            3, 0, 1,
+            3, 1, 2
         };
 
         bodyMesh = new Mesh
@@ -110,29 +123,37 @@ public class TargetLineVisual : MonoBehaviour
     }
 
     /// <summary>
-    /// Recreates colored line renderers for each square pyramid edge.
-    /// 正四角錐の各辺に色付きLineRendererを再生成します。
+    /// Recreates colored line renderers for each square prism edge.
+    /// 正四角柱の各辺に色付きLineRendererを再生成します。
     /// </summary>
     private void CreateVisualLines()
     {
         ClearVisualLines();
 
         var halfSize = size * 0.5f;
-        var baseY = -halfSize;
-        var apex = new Vector3(0.0f, halfSize, 0.0f);
-        var frontLeft = new Vector3(-halfSize, baseY, -halfSize);
-        var frontRight = new Vector3(halfSize, baseY, -halfSize);
-        var backRight = new Vector3(halfSize, baseY, halfSize);
-        var backLeft = new Vector3(-halfSize, baseY, halfSize);
+        var bottomY = -halfSize;
+        var topY = halfSize;
+        var bottomFrontLeft = new Vector3(-halfSize, bottomY, -halfSize);
+        var bottomFrontRight = new Vector3(halfSize, bottomY, -halfSize);
+        var bottomBackRight = new Vector3(halfSize, bottomY, halfSize);
+        var bottomBackLeft = new Vector3(-halfSize, bottomY, halfSize);
+        var topFrontLeft = new Vector3(-halfSize, topY, -halfSize);
+        var topFrontRight = new Vector3(halfSize, topY, -halfSize);
+        var topBackRight = new Vector3(halfSize, topY, halfSize);
+        var topBackLeft = new Vector3(-halfSize, topY, halfSize);
 
-        CreateLine("Base_Front", frontLeft, frontRight, baseFrontColor, baseRightColor);
-        CreateLine("Base_Right", frontRight, backRight, baseRightColor, baseBackColor);
-        CreateLine("Base_Back", backRight, backLeft, baseBackColor, baseLeftColor);
-        CreateLine("Base_Left", backLeft, frontLeft, baseLeftColor, baseFrontColor);
-        CreateLine("Side_FrontLeft", frontLeft, apex, baseFrontColor, apexColor);
-        CreateLine("Side_FrontRight", frontRight, apex, baseRightColor, apexColor);
-        CreateLine("Side_BackRight", backRight, apex, baseBackColor, apexColor);
-        CreateLine("Side_BackLeft", backLeft, apex, baseLeftColor, apexColor);
+        CreateLine("Bottom_Front", bottomFrontLeft, bottomFrontRight, baseFrontColor, baseRightColor);
+        CreateLine("Bottom_Right", bottomFrontRight, bottomBackRight, baseRightColor, baseBackColor);
+        CreateLine("Bottom_Back", bottomBackRight, bottomBackLeft, baseBackColor, baseLeftColor);
+        CreateLine("Bottom_Left", bottomBackLeft, bottomFrontLeft, baseLeftColor, baseFrontColor);
+        CreateLine("Top_Front", topFrontLeft, topFrontRight, topColor, topColor);
+        CreateLine("Top_Right", topFrontRight, topBackRight, topColor, topColor);
+        CreateLine("Top_Back", topBackRight, topBackLeft, topColor, topColor);
+        CreateLine("Top_Left", topBackLeft, topFrontLeft, topColor, topColor);
+        CreateLine("Vertical_FrontLeft", bottomFrontLeft, topFrontLeft, baseFrontColor, topColor);
+        CreateLine("Vertical_FrontRight", bottomFrontRight, topFrontRight, baseRightColor, topColor);
+        CreateLine("Vertical_BackRight", bottomBackRight, topBackRight, baseBackColor, topColor);
+        CreateLine("Vertical_BackLeft", bottomBackLeft, topBackLeft, baseLeftColor, topColor);
     }
 
     /// <summary>

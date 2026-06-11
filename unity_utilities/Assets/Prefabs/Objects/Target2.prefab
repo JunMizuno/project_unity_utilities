@@ -135,4 +135,4 @@ MonoBehaviour:
   baseRightColor: {r: 0.35, g: 1, b: 0.45, a: 1}
   baseBackColor: {r: 0.2, g: 0.85, b: 1, a: 1}
   baseLeftColor: {r: 0.75, g: 0.2, b: 1, a: 1}
-  apexColor: {r: 1, g: 0.92, b: 0.98, a: 1}
+  topColor: {r: 1, g: 0.92, b: 0.98, a: 1}
