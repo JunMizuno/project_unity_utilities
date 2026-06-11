@@ -68,7 +68,7 @@ public class CreateTargets : MonoBehaviour
     // 各ブロックが停止したと判定する速度しきい値です。
     // 上げると低速移動中でも停止扱いになりやすく、下げるとより完全な静止を待ちます。
     [SerializeField]
-    private float targetStopVelocityThreshold = 0.05f;
+    private float targetStopVelocityThreshold = 0.12f;
 
     // Duration all blocks must remain under the velocity threshold.
     // Increase to require more stable stillness. Decrease to return the ball sooner.

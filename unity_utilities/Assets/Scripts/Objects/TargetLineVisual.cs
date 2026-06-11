@@ -38,7 +38,7 @@ public class TargetLineVisual : MonoBehaviour
     /// </summary>
     void Awake()
     {
-        SetLineColorSliding(true);
+        SetLineColorSliding(false);
         CreateVisualLines();
     }
 
