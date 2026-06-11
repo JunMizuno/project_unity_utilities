@@ -18,7 +18,7 @@ Material:
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap:
-    RenderType: Opaque
+    RenderType: TransparentCutout
   disabledShaderPasses: []
   m_LockedProperties:
   m_SavedProperties:
@@ -34,10 +34,14 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AlphaClipThreshold: 0.1
     - _ProjectionScale: 1
+    - _UseAlphaClip: 1
+    - _UseTextureSlide: 0
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _ProjectionOffset: {r: 0, g: 0, b: 0, a: 0}
+    - _TextureSlideSpeed: {r: 0.2, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

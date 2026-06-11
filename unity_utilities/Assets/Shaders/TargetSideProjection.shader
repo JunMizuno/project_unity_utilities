@@ -6,15 +6,19 @@ Shader "Custom/TargetSideProjection"
         [MainColor] _BaseColor("Base Color", Color) = (1, 1, 1, 1)
         _ProjectionScale("Projection Scale", Float) = 1
         _ProjectionOffset("Projection Offset", Vector) = (0, 0, 0, 0)
+        [Toggle] _UseAlphaClip("Hide Transparent Area", Float) = 1
+        _AlphaClipThreshold("Alpha Clip Threshold", Range(0, 1)) = 0.1
+        [Toggle] _UseTextureSlide("Use Texture Slide", Float) = 0
+        _TextureSlideSpeed("Texture Slide Speed", Vector) = (0.2, 0, 0, 0)
     }
 
     SubShader
     {
         Tags
         {
-            "RenderType" = "Opaque"
+            "RenderType" = "TransparentCutout"
             "RenderPipeline" = "UniversalPipeline"
-            "Queue" = "Geometry"
+            "Queue" = "AlphaTest"
         }
 
         Pass
@@ -44,8 +48,7 @@ Shader "Custom/TargetSideProjection"
             struct Varyings
             {
                 float4 positionHCS : SV_POSITION;
-                float3 positionOS : TEXCOORD0;
-                float3 normalOS : TEXCOORD1;
+                float2 projectedUV : TEXCOORD0;
             };
 
             TEXTURE2D(_BaseMap);
@@ -55,17 +58,12 @@ Shader "Custom/TargetSideProjection"
                 float4 _BaseMap_ST;
                 float4 _BaseColor;
                 float _ProjectionScale;
+                float _UseAlphaClip;
+                float _AlphaClipThreshold;
+                float _UseTextureSlide;
                 float4 _ProjectionOffset;
+                float4 _TextureSlideSpeed;
             CBUFFER_END
-
-            Varyings vert(Attributes input)
-            {
-                Varyings output;
-                output.positionHCS = TransformObjectToHClip(input.positionOS.xyz);
-                output.positionOS = input.positionOS.xyz;
-                output.normalOS = normalize(input.normalOS);
-                return output;
-            }
 
             float2 GetProjectedUV(float3 positionOS, float3 normalOS)
             {
@@ -89,11 +87,30 @@ Shader "Custom/TargetSideProjection"
                 return uv * _BaseMap_ST.xy + _BaseMap_ST.zw;
             }
 
+            Varyings vert(Attributes input)
+            {
+                Varyings output;
+                output.positionHCS = TransformObjectToHClip(input.positionOS.xyz);
+                output.projectedUV = GetProjectedUV(input.positionOS.xyz, normalize(input.normalOS));
+
+                if (_UseTextureSlide > 0.5)
+                {
+                    output.projectedUV += _TextureSlideSpeed.xy * _Time.y;
+                }
+
+                return output;
+            }
+
             half4 frag(Varyings input) : SV_Target
             {
-                float2 uv = GetProjectedUV(input.positionOS, normalize(input.normalOS));
-                half4 textureColor = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv);
-                return textureColor * _BaseColor;
+                half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.projectedUV) * _BaseColor;
+
+                if (_UseAlphaClip > 0.5)
+                {
+                    clip(color.a - _AlphaClipThreshold);
+                }
+
+                return color;
             }
             ENDHLSL
         }
