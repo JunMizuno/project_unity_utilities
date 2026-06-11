@@ -23,7 +23,14 @@ public class TargetLineVisual : MonoBehaviour
     [SerializeField]
     private Color topColor = new Color(1.0f, 0.92f, 0.98f, 1.0f);
 
+    [SerializeField]
+    private bool isLineColorSliding;
+
+    [SerializeField]
+    private float lineColorSlideSpeed = 0.35f;
+
     private static Material sharedLineMaterial;
+    private readonly System.Collections.Generic.List<LineColorState> lineColorStates = new System.Collections.Generic.List<LineColorState>();
 
     /// <summary>
     /// Builds the square prism line visual.
@@ -35,12 +42,27 @@ public class TargetLineVisual : MonoBehaviour
     }
 
     /// <summary>
+    /// Updates the edge colors when color sliding is enabled.
+    /// 色スライドが有効な場合に辺の色を更新します。
+    /// </summary>
+    private void Update()
+    {
+        if (!isLineColorSliding)
+        {
+            return;
+        }
+
+        UpdateLineColors(Time.time * lineColorSlideSpeed);
+    }
+
+    /// <summary>
     /// Recreates colored line renderers for each square prism edge.
     /// 正四角柱の各辺に色付きLineRendererを再生成します。
     /// </summary>
     private void CreateVisualLines()
     {
         ClearVisualLines();
+        lineColorStates.Clear();
 
         var halfSize = size * 0.5f;
         var bottomY = -halfSize;
@@ -109,6 +131,41 @@ public class TargetLineVisual : MonoBehaviour
         lineRenderer.numCornerVertices = 2;
         lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         lineRenderer.receiveShadows = false;
+
+        lineColorStates.Add(new LineColorState(lineRenderer, startColor, endColor));
+    }
+
+    /// <summary>
+    /// Slides each stored line color through the hue circle.
+    /// 保存した各ライン色を色相環に沿ってスライドさせます。
+    /// </summary>
+    private void UpdateLineColors(float hueOffset)
+    {
+        for (var i = 0; i < lineColorStates.Count; i++)
+        {
+            var lineColorState = lineColorStates[i];
+            if (lineColorState.LineRenderer == null)
+            {
+                continue;
+            }
+
+            lineColorState.LineRenderer.startColor = ShiftHue(lineColorState.StartColor, hueOffset);
+            lineColorState.LineRenderer.endColor = ShiftHue(lineColorState.EndColor, hueOffset);
+        }
+    }
+
+    /// <summary>
+    /// Returns a color with its hue shifted while preserving alpha.
+    /// アルファ値を保ったまま色相をずらした色を返します。
+    /// </summary>
+    private Color ShiftHue(Color sourceColor, float hueOffset)
+    {
+        Color.RGBToHSV(sourceColor, out var hue, out var saturation, out var value);
+        var shiftedHue = Mathf.Repeat(hue + hueOffset, 1.0f);
+        var shiftedColor = Color.HSVToRGB(shiftedHue, saturation, value);
+        shiftedColor.a = sourceColor.a;
+
+        return shiftedColor;
     }
 
     /// <summary>
@@ -136,5 +193,25 @@ public class TargetLineVisual : MonoBehaviour
         sharedLineMaterial.SetColor("_Color", Color.white);
 
         return sharedLineMaterial;
+    }
+
+    private sealed class LineColorState
+    {
+        /// <summary>
+        /// Stores one line renderer and its base colors.
+        /// 1本のLineRendererと基準色を保持します。
+        /// </summary>
+        public LineColorState(LineRenderer lineRenderer, Color startColor, Color endColor)
+        {
+            LineRenderer = lineRenderer;
+            StartColor = startColor;
+            EndColor = endColor;
+        }
+
+        public LineRenderer LineRenderer { get; }
+
+        public Color StartColor { get; }
+
+        public Color EndColor { get; }
     }
 }
