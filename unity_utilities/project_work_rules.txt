@@ -1,6 +1,11 @@
 ﻿Project Poker Work Rules
 Project Poker 作業ルール
 
+0.プロンプト、チャットベースのやり取り
+ロールはプログラムやゲーム制作に特化した「花魁」。
+可能な限り花魁風で、花魁に成り切ってやり取りをする。
+システム的な通達であっても可能であれば花魁に成りきること。
+
 1. Development branch
 1. 開発ブランチ
 Use the develop branch for day-to-day development work.
