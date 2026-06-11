@@ -6,6 +6,9 @@ public class TargetLineVisual : MonoBehaviour
     private float size = 1.0f;
 
     [SerializeField]
+    private Color bodyColor = new Color(0.48f, 0.56f, 0.46f, 1.0f);
+
+    [SerializeField]
     private float lineWidth = 0.045f;
 
     [SerializeField]
@@ -24,6 +27,9 @@ public class TargetLineVisual : MonoBehaviour
     private Color apexColor = new Color(1.0f, 0.92f, 0.98f, 1.0f);
 
     private static Material sharedLineMaterial;
+    private static Material sharedBodyMaterial;
+    private Mesh bodyMesh;
+    private MaterialPropertyBlock bodyMaterialPropertyBlock;
 
     /// <summary>
     /// Builds the square pyramid line visual.
@@ -31,7 +37,76 @@ public class TargetLineVisual : MonoBehaviour
     /// </summary>
     void Awake()
     {
+        CreateBodyMesh();
         CreateVisualLines();
+    }
+
+    /// <summary>
+    /// Releases the runtime mesh generated for this target visual.
+    /// このターゲット表示用に実行時生成したメッシュを解放します。
+    /// </summary>
+    private void OnDestroy()
+    {
+        if (bodyMesh != null)
+        {
+            Destroy(bodyMesh);
+            bodyMesh = null;
+        }
+    }
+
+    /// <summary>
+    /// Creates the solid square pyramid body so back-side lines are hidden by depth.
+    /// 奥側のラインが透けて見えすぎないよう、正四角錐の本体メッシュを生成します。
+    /// </summary>
+    private void CreateBodyMesh()
+    {
+        var meshFilter = GetComponent<MeshFilter>();
+        if (meshFilter == null)
+        {
+            meshFilter = gameObject.AddComponent<MeshFilter>();
+        }
+
+        var meshRenderer = GetComponent<MeshRenderer>();
+        if (meshRenderer == null)
+        {
+            meshRenderer = gameObject.AddComponent<MeshRenderer>();
+        }
+
+        var halfSize = size * 0.5f;
+        var baseY = -halfSize;
+        var vertices = new[]
+        {
+            new Vector3(-halfSize, baseY, -halfSize),
+            new Vector3(halfSize, baseY, -halfSize),
+            new Vector3(halfSize, baseY, halfSize),
+            new Vector3(-halfSize, baseY, halfSize),
+            new Vector3(0.0f, halfSize, 0.0f)
+        };
+
+        var triangles = new[]
+        {
+            0, 2, 1,
+            0, 3, 2,
+            0, 1, 4,
+            1, 2, 4,
+            2, 3, 4,
+            3, 0, 4
+        };
+
+        bodyMesh = new Mesh
+        {
+            name = "TargetLineVisualBodyMesh",
+            vertices = vertices,
+            triangles = triangles
+        };
+        bodyMesh.RecalculateNormals();
+        bodyMesh.RecalculateBounds();
+
+        meshFilter.sharedMesh = bodyMesh;
+        meshRenderer.sharedMaterial = GetBodyMaterial();
+        ApplyBodyColor(meshRenderer);
+        meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        meshRenderer.receiveShadows = false;
     }
 
     /// <summary>
@@ -114,10 +189,10 @@ public class TargetLineVisual : MonoBehaviour
             return sharedLineMaterial;
         }
 
-        var shader = Shader.Find("Universal Render Pipeline/Unlit");
+        var shader = Shader.Find("Sprites/Default");
         if (shader == null)
         {
-            shader = Shader.Find("Sprites/Default");
+            shader = Shader.Find("Universal Render Pipeline/Unlit");
         }
 
         sharedLineMaterial = new Material(shader)
@@ -128,5 +203,49 @@ public class TargetLineVisual : MonoBehaviour
         sharedLineMaterial.SetColor("_Color", Color.white);
 
         return sharedLineMaterial;
+    }
+
+    /// <summary>
+    /// Returns the shared material used for the solid target body.
+    /// ターゲット本体メッシュに使う共有マテリアルを返します。
+    /// </summary>
+    private Material GetBodyMaterial()
+    {
+        if (sharedBodyMaterial != null)
+        {
+            return sharedBodyMaterial;
+        }
+
+        var shader = Shader.Find("Universal Render Pipeline/Lit");
+        if (shader == null)
+        {
+            shader = Shader.Find("Standard");
+        }
+
+        sharedBodyMaterial = new Material(shader)
+        {
+            name = "TargetLineBodyMaterial"
+        };
+        sharedBodyMaterial.SetColor("_BaseColor", bodyColor);
+        sharedBodyMaterial.SetColor("_Color", bodyColor);
+
+        return sharedBodyMaterial;
+    }
+
+    /// <summary>
+    /// Applies the body color without creating a unique material per target.
+    /// ターゲットごとの専用マテリアルを増やさず本体色を適用します。
+    /// </summary>
+    private void ApplyBodyColor(Renderer meshRenderer)
+    {
+        if (bodyMaterialPropertyBlock == null)
+        {
+            bodyMaterialPropertyBlock = new MaterialPropertyBlock();
+        }
+
+        meshRenderer.GetPropertyBlock(bodyMaterialPropertyBlock);
+        bodyMaterialPropertyBlock.SetColor("_BaseColor", bodyColor);
+        bodyMaterialPropertyBlock.SetColor("_Color", bodyColor);
+        meshRenderer.SetPropertyBlock(bodyMaterialPropertyBlock);
     }
 }
