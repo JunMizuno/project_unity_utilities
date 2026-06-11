@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class Target2Visual : MonoBehaviour
+public class TargetLineVisual : MonoBehaviour
 {
     [SerializeField]
     private float size = 1.0f;
@@ -69,7 +69,7 @@ public class Target2Visual : MonoBehaviour
         for (var i = transform.childCount - 1; i >= 0; i--)
         {
             var child = transform.GetChild(i);
-            if (!child.name.StartsWith("Target2Line_"))
+            if (!child.name.StartsWith("TargetLine_"))
             {
                 continue;
             }
@@ -84,7 +84,7 @@ public class Target2Visual : MonoBehaviour
     /// </summary>
     private void CreateLine(string lineName, Vector3 startPosition, Vector3 endPosition, Color startColor, Color endColor)
     {
-        var lineObject = new GameObject($"Target2Line_{lineName}");
+        var lineObject = new GameObject($"TargetLine_{lineName}");
         lineObject.transform.SetParent(transform, false);
 
         var lineRenderer = lineObject.AddComponent<LineRenderer>();
@@ -122,7 +122,7 @@ public class Target2Visual : MonoBehaviour
 
         sharedLineMaterial = new Material(shader)
         {
-            name = "Target2LineMaterial"
+            name = "TargetLineMaterial"
         };
         sharedLineMaterial.SetColor("_BaseColor", Color.white);
         sharedLineMaterial.SetColor("_Color", Color.white);
