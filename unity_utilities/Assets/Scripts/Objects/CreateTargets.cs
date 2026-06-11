@@ -68,7 +68,14 @@ public class CreateTargets : MonoBehaviour
     // 各ブロックが停止したと判定する速度しきい値です。
     // 上げると低速移動中でも停止扱いになりやすく、下げるとより完全な静止を待ちます。
     [SerializeField]
-    private float targetStopVelocityThreshold = 0.12f;
+    private float targetStopVelocityThreshold = 0.2f;
+
+    // Y position below which blocks are treated as stopped for return checks.
+    // Increase to ignore fallen blocks sooner. Decrease to keep checking blocks until they fall lower.
+    // ブロックを復帰判定上の停止扱いにするY座標です。
+    // 上げると落下したブロックを早めに無視し、下げるとより下まで落ちるまで判定対象に残します。
+    [SerializeField]
+    private float targetStoppedYThreshold = 0.0f;
 
     // Duration all blocks must remain under the velocity threshold.
     // Increase to require more stable stillness. Decrease to return the ball sooner.
@@ -391,6 +398,11 @@ public class CreateTargets : MonoBehaviour
         {
             var target = child.GetComponent<Target>();
             if (target == null || !IsTargetInStopCheckView(target))
+            {
+                continue;
+            }
+
+            if (target.transform.position.y < targetStoppedYThreshold)
             {
                 continue;
             }
