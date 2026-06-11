@@ -129,7 +129,6 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::TargetLineVisual
   size: 1
-  bodyColor: {r: 0.48, g: 0.56, b: 0.46, a: 1}
   lineWidth: 0.045
   baseFrontColor: {r: 1, g: 0.95, b: 0.35, a: 1}
   baseRightColor: {r: 0.35, g: 1, b: 0.45, a: 1}
