@@ -75,7 +75,7 @@ public class CreateTargets : MonoBehaviour
     // ブロックを復帰判定上の停止扱いにするY座標です。
     // 上げると落下したブロックを早めに無視し、下げるとより下まで落ちるまで判定対象に残します。
     [SerializeField]
-    private float targetStoppedYThreshold = 0.0f;
+    private float targetStoppedYThreshold = -3.0f;
 
     // Duration all blocks must remain under the velocity threshold.
     // Increase to require more stable stillness. Decrease to return the ball sooner.
@@ -101,6 +101,30 @@ public class CreateTargets : MonoBehaviour
     private bool isLaunchStarted;
 
     private bool isTargetPhysicsReleased;
+
+    /// <summary>
+    /// Sets the stopped Y threshold for every active target generator.
+    /// 有効なすべてのターゲット生成器に停止扱いY座標を設定します。
+    /// </summary>
+    public static void SetTargetStoppedYThresholdForAll(float threshold)
+    {
+        foreach (var instance in Instances)
+        {
+            if (instance != null)
+            {
+                instance.SetTargetStoppedYThreshold(threshold);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sets the Y position below which blocks are treated as stopped.
+    /// ブロックを停止扱いにするY座標を設定します。
+    /// </summary>
+    public void SetTargetStoppedYThreshold(float threshold)
+    {
+        targetStoppedYThreshold = threshold;
+    }
 
     /// <summary>
     /// Registers this target generator for global target movement checks.
