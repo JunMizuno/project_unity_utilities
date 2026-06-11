@@ -38,7 +38,26 @@ public class TargetLineVisual : MonoBehaviour
     /// </summary>
     void Awake()
     {
+        SetLineColorSliding(true);
         CreateVisualLines();
+    }
+
+    /// <summary>
+    /// Sets whether the line colors slide over time.
+    /// ライン色を時間経過でスライドさせるかを設定します。
+    /// </summary>
+    public void SetLineColorSliding(bool isEnabled)
+    {
+        isLineColorSliding = isEnabled;
+    }
+
+    /// <summary>
+    /// Sets the line color slide speed.
+    /// ライン色のスライド速度を設定します。
+    /// </summary>
+    public void SetLineColorSlideSpeed(float speed)
+    {
+        lineColorSlideSpeed = Mathf.Max(0.0f, speed);
     }
 
     /// <summary>
