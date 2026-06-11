@@ -91,6 +91,11 @@ public class Target : MonoBehaviour
 
         if (targetRenderer == null)
         {
+            targetRenderer = GetComponentInChildren<Renderer>();
+        }
+
+        if (targetRenderer == null)
+        {
             return IsWorldPointInCameraView(targetCamera, transform.position, viewportPadding);
         }
 
