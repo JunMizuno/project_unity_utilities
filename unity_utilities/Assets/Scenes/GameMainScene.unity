@@ -785,6 +785,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8176da2239ae61749b7b44fde02ccf8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraManager
+  controlledCamera: {fileID: 1345905729}
+  followTarget: {fileID: 0}
+  lookAtTarget: {fileID: 0}
+  followOffset: {x: 0, y: 2, z: -10}
+  positionSmoothSpeed: 5
+  rotationSmoothSpeed: 8
 --- !u!4 &1581769054
 Transform:
   m_ObjectHideFlags: 0
