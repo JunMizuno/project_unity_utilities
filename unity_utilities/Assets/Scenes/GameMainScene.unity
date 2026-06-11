@@ -539,7 +539,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1060466caa64fdb4294f39dbbf167557, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CreateTargets
-  targetPrefab: {fileID: 3859646832928500369, guid: e83befbba78882a41b6bd72e631278f5, type: 3}
+  targetPrefab: {fileID: 7400000000000000001, guid: 838ab257169b47f890a681f8022666dd, type: 3}
   layerFixIntervalSeconds: 0.2
   initialCreateDelaySeconds: 0.2
   minImpactExplosionForce: 4
