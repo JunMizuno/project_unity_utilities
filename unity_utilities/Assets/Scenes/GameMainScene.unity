@@ -790,8 +790,13 @@ MonoBehaviour:
   followTarget: {fileID: 0}
   lookAtTarget: {fileID: 0}
   followOffset: {x: 0, y: 2, z: -10}
+  launchFollowDistance: 5
+  launchFollowHeight: 2
   positionSmoothSpeed: 5
   rotationSmoothSpeed: 8
+  returnToInitialSmoothSpeed: 6
+  returnToInitialCompleteDistance: 0.02
+  returnToInitialCompleteAngle: 0.5
 --- !u!4 &1581769054
 Transform:
   m_ObjectHideFlags: 0

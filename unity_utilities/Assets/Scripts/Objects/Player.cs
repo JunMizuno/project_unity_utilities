@@ -8,6 +8,8 @@ public class Player : MonoBehaviour
 
     public static readonly Subject<Player> LaunchedSubject = new Subject<Player>();
 
+    public static readonly Subject<PlayerLaunchState> LaunchStartedSubject = new Subject<PlayerLaunchState>();
+
     public static readonly Subject<PlayerTargetHit> HitTargetSubject = new Subject<PlayerTargetHit>();
 
     [SerializeField]
@@ -183,6 +185,7 @@ public class Player : MonoBehaviour
         currentPowerRate = Mathf.Clamp01(powerRate);
         isLaunched = true;
         LaunchedSubject.OnNext(this);
+        LaunchStartedSubject.OnNext(new PlayerLaunchState(this, launchDirection.normalized, currentPowerRate));
         var launchForce = Mathf.Lerp(minLaunchForce, maxLaunchForce, currentPowerRate);
         rigidBody.AddForce(launchDirection.normalized * launchForce, ForceMode.Impulse);
     }
@@ -436,6 +439,26 @@ public class Player : MonoBehaviour
         {
             runtimeMaterial.SetFloat(propertyName, value);
         }
+    }
+}
+
+public readonly struct PlayerLaunchState
+{
+    public readonly Player Player;
+
+    public readonly Vector3 LaunchDirection;
+
+    public readonly float PowerRate;
+
+    /// <summary>
+    /// Stores player launch data for systems that react to launch direction.
+    /// 発射方向に反応するシステム向けのプレイヤー発射情報を保持します。
+    /// </summary>
+    public PlayerLaunchState(Player player, Vector3 launchDirection, float powerRate)
+    {
+        Player = player;
+        LaunchDirection = launchDirection;
+        PowerRate = powerRate;
     }
 }
 

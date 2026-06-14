@@ -1,7 +1,16 @@
 ﻿using UnityEngine;
+using R3;
 
 public class CameraManager : MonoBehaviour
 {
+    private enum CameraMode
+    {
+        Manual,
+        FollowTarget,
+        LaunchChase,
+        ReturnToInitialPose,
+    }
+
     [SerializeField]
     private Camera controlledCamera;
 
@@ -14,15 +23,50 @@ public class CameraManager : MonoBehaviour
     [SerializeField]
     private Vector3 followOffset = new Vector3(0.0f, 2.0f, -10.0f);
 
+    // Distance kept behind the launched object during launch chase.
+    // Increase to keep the camera farther behind the ball. Decrease to move closer.
+    // 発射追従中に対象の後ろへ保つ距離です。
+    // 上げるとボールの後方から遠く追い、下げると近く追います。
+    [SerializeField]
+    private float launchFollowDistance = 5.0f;
+
+    // Height offset added while chasing a launched object.
+    // Increase to view the ball from higher up. Decrease to follow closer to the ball height.
+    // 発射追従中に加える高さです。
+    // 上げると高い視点になり、下げるとボールの高さに近い視点になります。
+    [SerializeField]
+    private float launchFollowHeight = 2.0f;
+
     [SerializeField]
     private float positionSmoothSpeed = 5.0f;
 
     [SerializeField]
     private float rotationSmoothSpeed = 8.0f;
 
+    [SerializeField]
+    private float returnToInitialSmoothSpeed = 6.0f;
+
+    [SerializeField]
+    private float returnToInitialCompleteDistance = 0.02f;
+
+    [SerializeField]
+    private float returnToInitialCompleteAngle = 0.5f;
+
+    private CameraMode cameraMode = CameraMode.Manual;
+
+    private Transform launchChaseTarget;
+
+    private Rigidbody launchChaseRigidbody;
+
+    private Vector3 launchChaseDirection = Vector3.forward;
+
+    private Vector3 initialCameraPosition;
+
+    private Quaternion initialCameraRotation;
+
     /// <summary>
-    /// Initializes the managed camera reference.
-    /// 管理対象カメラの参照を初期化します。
+    /// Initializes the managed camera reference and stores the initial camera pose.
+    /// 管理対象カメラ参照を初期化し、初期カメラ姿勢を保持します。
     /// </summary>
     private void Awake()
     {
@@ -30,11 +74,33 @@ public class CameraManager : MonoBehaviour
         {
             controlledCamera = Camera.main;
         }
+
+        if (controlledCamera != null)
+        {
+            initialCameraPosition = controlledCamera.transform.position;
+            initialCameraRotation = controlledCamera.transform.rotation;
+        }
     }
 
     /// <summary>
-    /// Applies camera follow and look-at behavior after target movement has finished.
-    /// ターゲットの移動後にカメラの追従と注視を反映します。
+    /// Subscribes to player launch and hit events for camera chase behavior.
+    /// カメラ追従用にプレイヤー発射と衝突イベントを購読します。
+    /// </summary>
+    private void Start()
+    {
+        Player.LaunchStartedSubject
+            .Where(state => state.Player != null)
+            .Subscribe(state => StartLaunchChase(state.Player.transform, state.LaunchDirection))
+            .AddTo(this);
+
+        Player.HitTargetSubject
+            .Subscribe(_ => ReturnToInitialPose())
+            .AddTo(this);
+    }
+
+    /// <summary>
+    /// Applies camera behavior after target movement has finished.
+    /// ターゲットの移動後にカメラ挙動を反映します。
     /// </summary>
     private void LateUpdate()
     {
@@ -43,8 +109,19 @@ public class CameraManager : MonoBehaviour
             return;
         }
 
-        UpdateCameraPosition();
-        UpdateCameraRotation();
+        switch (cameraMode)
+        {
+            case CameraMode.FollowTarget:
+                UpdateCameraPosition();
+                UpdateCameraRotation();
+                break;
+            case CameraMode.LaunchChase:
+                UpdateLaunchChase();
+                break;
+            case CameraMode.ReturnToInitialPose:
+                UpdateReturnToInitialPose();
+                break;
+        }
     }
 
     /// <summary>
@@ -54,6 +131,7 @@ public class CameraManager : MonoBehaviour
     public void SetFollowTarget(Transform target)
     {
         followTarget = target;
+        cameraMode = followTarget == null && lookAtTarget == null ? CameraMode.Manual : CameraMode.FollowTarget;
     }
 
     /// <summary>
@@ -63,6 +141,7 @@ public class CameraManager : MonoBehaviour
     public void SetLookAtTarget(Transform target)
     {
         lookAtTarget = target;
+        cameraMode = followTarget == null && lookAtTarget == null ? CameraMode.Manual : CameraMode.FollowTarget;
     }
 
     /// <summary>
@@ -73,6 +152,7 @@ public class CameraManager : MonoBehaviour
     {
         followTarget = nextFollowTarget;
         lookAtTarget = nextLookAtTarget;
+        cameraMode = followTarget == null && lookAtTarget == null ? CameraMode.Manual : CameraMode.FollowTarget;
     }
 
     /// <summary>
@@ -98,6 +178,56 @@ public class CameraManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Starts chasing the launched target from behind its launch direction.
+    /// 発射方向の後ろから発射対象を追従します。
+    /// </summary>
+    public void StartLaunchChase(Transform target, Vector3 launchDirection)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        launchChaseTarget = target;
+        launchChaseRigidbody = target.GetComponent<Rigidbody>();
+        launchChaseDirection = launchDirection.sqrMagnitude > Mathf.Epsilon
+            ? launchDirection.normalized
+            : target.forward;
+        cameraMode = CameraMode.LaunchChase;
+    }
+
+    /// <summary>
+    /// Starts returning the camera to the pose captured at scene start.
+    /// シーン開始時に記録したカメラ姿勢へ戻り始めます。
+    /// </summary>
+    public void ReturnToInitialPose()
+    {
+        launchChaseTarget = null;
+        launchChaseRigidbody = null;
+        followTarget = null;
+        lookAtTarget = null;
+        cameraMode = CameraMode.ReturnToInitialPose;
+    }
+
+    /// <summary>
+    /// Sets the distance kept behind the launched target.
+    /// 発射対象の後ろへ保つ距離を設定します。
+    /// </summary>
+    public void SetLaunchFollowDistance(float distance)
+    {
+        launchFollowDistance = Mathf.Max(0.0f, distance);
+    }
+
+    /// <summary>
+    /// Sets the height offset used while chasing the launched target.
+    /// 発射対象を追従するときの高さを設定します。
+    /// </summary>
+    public void SetLaunchFollowHeight(float height)
+    {
+        launchFollowHeight = height;
+    }
+
+    /// <summary>
     /// Updates the camera position when a follow target is assigned.
     /// 追従ターゲットが設定されている場合にカメラ位置を更新します。
     /// </summary>
@@ -116,6 +246,59 @@ public class CameraManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Updates the camera position and rotation while chasing a launched object.
+    /// 発射されたオブジェクトを追従中のカメラ位置と回転を更新します。
+    /// </summary>
+    private void UpdateLaunchChase()
+    {
+        if (launchChaseTarget == null)
+        {
+            ReturnToInitialPose();
+            return;
+        }
+
+        var followDirection = GetLaunchChaseDirection();
+        var targetPosition = launchChaseTarget.position
+            - followDirection * launchFollowDistance
+            + Vector3.up * launchFollowHeight;
+        controlledCamera.transform.position = Vector3.Lerp(
+            controlledCamera.transform.position,
+            targetPosition,
+            GetFrameLerpRate(positionSmoothSpeed));
+
+        var targetRotation = GetLookAtRotation(launchChaseTarget.position);
+        controlledCamera.transform.rotation = Quaternion.Slerp(
+            controlledCamera.transform.rotation,
+            targetRotation,
+            GetFrameLerpRate(rotationSmoothSpeed));
+    }
+
+    /// <summary>
+    /// Updates the camera until it reaches the initial scene pose.
+    /// シーン初期姿勢へ到達するまでカメラを更新します。
+    /// </summary>
+    private void UpdateReturnToInitialPose()
+    {
+        controlledCamera.transform.position = Vector3.Lerp(
+            controlledCamera.transform.position,
+            initialCameraPosition,
+            GetFrameLerpRate(returnToInitialSmoothSpeed));
+        controlledCamera.transform.rotation = Quaternion.Slerp(
+            controlledCamera.transform.rotation,
+            initialCameraRotation,
+            GetFrameLerpRate(returnToInitialSmoothSpeed));
+
+        var distance = Vector3.Distance(controlledCamera.transform.position, initialCameraPosition);
+        var angle = Quaternion.Angle(controlledCamera.transform.rotation, initialCameraRotation);
+        if (distance <= returnToInitialCompleteDistance && angle <= returnToInitialCompleteAngle)
+        {
+            controlledCamera.transform.position = initialCameraPosition;
+            controlledCamera.transform.rotation = initialCameraRotation;
+            cameraMode = CameraMode.Manual;
+        }
+    }
+
+    /// <summary>
     /// Updates the camera rotation when a look-at target is assigned.
     /// 注視ターゲットが設定されている場合にカメラ回転を更新します。
     /// </summary>
@@ -131,6 +314,22 @@ public class CameraManager : MonoBehaviour
             controlledCamera.transform.rotation,
             targetRotation,
             GetFrameLerpRate(rotationSmoothSpeed));
+    }
+
+    /// <summary>
+    /// Returns the current chase direction from velocity or the original launch direction.
+    /// 速度または発射時方向から現在の追従方向を返します。
+    /// </summary>
+    private Vector3 GetLaunchChaseDirection()
+    {
+        if (launchChaseRigidbody != null && launchChaseRigidbody.linearVelocity.sqrMagnitude > 0.01f)
+        {
+            launchChaseDirection = launchChaseRigidbody.linearVelocity.normalized;
+        }
+
+        return launchChaseDirection.sqrMagnitude > Mathf.Epsilon
+            ? launchChaseDirection.normalized
+            : Vector3.forward;
     }
 
     /// <summary>
