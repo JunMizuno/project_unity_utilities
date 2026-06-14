@@ -1820,7 +1820,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WindForceControl
   isWindEnabled: 1
   windDirection: {x: 1, y: 0, z: 0}
-  windForce: 2
+  windForce: 20
   forceMode: 0
   affectPlayer: 1
   affectTargets: 1
