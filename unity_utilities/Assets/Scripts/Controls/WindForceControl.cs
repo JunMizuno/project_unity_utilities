@@ -21,6 +21,13 @@ public class WindForceControl : MonoBehaviour
     [SerializeField]
     private float windForce = 2.0f;
 
+    // Continuous wind force applied to targets after their physics is released.
+    // Increase to make hit blocks drift faster. Decrease to keep block movement closer to impact-only motion.
+    // 物理解放後のターゲットへ加える継続的な風の力です。
+    // 上げるとヒット後のブロックが風方向へ流されやすくなり、下げると衝突力中心の動きになります。
+    [SerializeField]
+    private float targetWindForce = 4.0f;
+
     [SerializeField]
     private ForceMode forceMode = ForceMode.Force;
 
@@ -43,7 +50,7 @@ public class WindForceControl : MonoBehaviour
     [SerializeField]
     private List<Rigidbody> excludedRigidbodies = new List<Rigidbody>();
 
-    private readonly HashSet<Rigidbody> runtimeRigidbodies = new HashSet<Rigidbody>();
+    private readonly Dictionary<Rigidbody, float> runtimeWindForces = new Dictionary<Rigidbody, float>();
 
     private bool isWindActive;
 
@@ -104,6 +111,15 @@ public class WindForceControl : MonoBehaviour
     }
 
     /// <summary>
+    /// Sets the wind force applied to targets after impact.
+    /// 衝突後のターゲットへ加える風の力を設定します。
+    /// </summary>
+    public void SetTargetWindForce(float force)
+    {
+        targetWindForce = force;
+    }
+
+    /// <summary>
     /// Adds a rigidbody that should receive wind even when it is not player or target.
     /// プレイヤーやターゲット以外でも風を受けるRigidbodyを追加します。
     /// </summary>
@@ -133,7 +149,7 @@ public class WindForceControl : MonoBehaviour
     /// </summary>
     private void StartWindForPlayer(Player player)
     {
-        runtimeRigidbodies.Clear();
+        runtimeWindForces.Clear();
         isWindActive = true;
 
         if (!affectPlayer)
@@ -142,7 +158,7 @@ public class WindForceControl : MonoBehaviour
         }
 
         var playerRigidbody = player.GetComponent<Rigidbody>();
-        RegisterRuntimeRigidbody(playerRigidbody);
+        RegisterRuntimeRigidbody(playerRigidbody, windForce);
     }
 
     /// <summary>
@@ -152,7 +168,7 @@ public class WindForceControl : MonoBehaviour
     private void StopWind()
     {
         isWindActive = false;
-        runtimeRigidbodies.Clear();
+        runtimeWindForces.Clear();
     }
 
     /// <summary>
@@ -166,18 +182,18 @@ public class WindForceControl : MonoBehaviour
             return;
         }
 
-        RegisterRuntimeRigidbody(targetRigidbody);
+        RegisterRuntimeRigidbody(targetRigidbody, targetWindForce);
     }
 
     /// <summary>
     /// Registers a runtime rigidbody for automatic wind application.
     /// 自動風適用用に実行時Rigidbodyを登録します。
     /// </summary>
-    private void RegisterRuntimeRigidbody(Rigidbody targetRigidbody)
+    private void RegisterRuntimeRigidbody(Rigidbody targetRigidbody, float force)
     {
         if (targetRigidbody != null && !targetRigidbody.isKinematic)
         {
-            runtimeRigidbodies.Add(targetRigidbody);
+            runtimeWindForces[targetRigidbody] = force;
         }
     }
 
@@ -198,7 +214,7 @@ public class WindForceControl : MonoBehaviour
 
             if (!IsExcluded(targetRigidbody))
             {
-                ApplyWind(targetRigidbody);
+                ApplyWind(targetRigidbody, windForce);
             }
         }
     }
@@ -209,13 +225,14 @@ public class WindForceControl : MonoBehaviour
     /// </summary>
     private void ApplyWindToRuntimeRigidbodies()
     {
-        runtimeRigidbodies.RemoveWhere(targetRigidbody => targetRigidbody == null);
+        RemoveMissingRuntimeRigidbodies();
 
-        foreach (var targetRigidbody in runtimeRigidbodies)
+        foreach (var pair in runtimeWindForces)
         {
+            var targetRigidbody = pair.Key;
             if (CanApplyWindToRuntimeRigidbody(targetRigidbody))
             {
-                ApplyWind(targetRigidbody);
+                ApplyWind(targetRigidbody, pair.Value);
             }
         }
     }
@@ -233,18 +250,39 @@ public class WindForceControl : MonoBehaviour
     }
 
     /// <summary>
-    /// Applies the configured wind force to a rigidbody.
-    /// 設定された風の力をRigidbodyへ適用します。
+    /// Removes runtime wind targets that were destroyed.
+    /// 破棄済みの実行時風対象を取り除きます。
     /// </summary>
-    private void ApplyWind(Rigidbody targetRigidbody)
+    private void RemoveMissingRuntimeRigidbodies()
+    {
+        var missingRigidbodies = new List<Rigidbody>();
+        foreach (var pair in runtimeWindForces)
+        {
+            if (pair.Key == null)
+            {
+                missingRigidbodies.Add(pair.Key);
+            }
+        }
+
+        foreach (var targetRigidbody in missingRigidbodies)
+        {
+            runtimeWindForces.Remove(targetRigidbody);
+        }
+    }
+
+    /// <summary>
+    /// Applies the specified wind force to a rigidbody.
+    /// 指定された風の力をRigidbodyへ適用します。
+    /// </summary>
+    private void ApplyWind(Rigidbody targetRigidbody, float force)
     {
         var direction = windDirection.sqrMagnitude > Mathf.Epsilon ? windDirection.normalized : Vector3.zero;
-        if (direction == Vector3.zero || Mathf.Approximately(windForce, 0.0f))
+        if (direction == Vector3.zero || Mathf.Approximately(force, 0.0f))
         {
             return;
         }
 
-        targetRigidbody.AddForce(direction * windForce, forceMode);
+        targetRigidbody.AddForce(direction * force, forceMode);
     }
 
     /// <summary>

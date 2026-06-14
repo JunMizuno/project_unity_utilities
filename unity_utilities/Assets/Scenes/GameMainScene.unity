@@ -1821,6 +1821,7 @@ MonoBehaviour:
   isWindEnabled: 1
   windDirection: {x: 1, y: 0, z: 0}
   windForce: 20
+  targetWindForce: 4
   forceMode: 0
   affectPlayer: 1
   affectTargets: 1
