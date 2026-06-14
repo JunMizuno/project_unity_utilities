@@ -1,7 +1,10 @@
 ﻿using UnityEngine;
+using R3;
 
 public class Target : MonoBehaviour
 {
+    public static readonly Subject<TargetPhysicsState> PhysicsStateChangedSubject = new Subject<TargetPhysicsState>();
+
     [SerializeField]
     private Rigidbody rigidBody;
 
@@ -47,6 +50,8 @@ public class Target : MonoBehaviour
             rigidBody.angularVelocity = Vector3.zero;
             rigidBody.Sleep();
         }
+
+        PhysicsStateChangedSubject.OnNext(new TargetPhysicsState(this, rigidBody, enabled));
     }
 
     /// <summary>
@@ -132,5 +137,25 @@ public class Target : MonoBehaviour
     void Update()
     {
 
+    }
+}
+
+public readonly struct TargetPhysicsState
+{
+    public readonly Target Target;
+
+    public readonly Rigidbody Rigidbody;
+
+    public readonly bool IsPhysicsEnabled;
+
+    /// <summary>
+    /// Stores target physics state changes for systems that react to physics release.
+    /// 物理解放へ反応するシステム向けにターゲットの物理状態変更情報を保持します。
+    /// </summary>
+    public TargetPhysicsState(Target target, Rigidbody rigidbody, bool isPhysicsEnabled)
+    {
+        Target = target;
+        Rigidbody = rigidbody;
+        IsPhysicsEnabled = isPhysicsEnabled;
     }
 }
