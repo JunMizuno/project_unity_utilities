@@ -362,6 +362,13 @@ public class CreateTargets : MonoBehaviour
 
         var force = Mathf.Lerp(minImpactExplosionForce, maxImpactExplosionForce, Mathf.Clamp01(hit.PowerRate));
         AddImpactExplosionForce(hit.HitPoint, force);
+
+        isCanceled = await UniTask.WaitForFixedUpdate(cancellationToken).SuppressCancellationThrow();
+        if (isCanceled)
+        {
+            return;
+        }
+
         PlayCameraShakeByFlyingTargetCount();
         WaitForAllTargetsStoppedAsync(cancellationToken).Forget();
     }

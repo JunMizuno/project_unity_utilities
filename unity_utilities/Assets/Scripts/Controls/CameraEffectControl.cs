@@ -11,16 +11,16 @@ public class CameraEffectControl : MonoBehaviour
     private float shakeDurationSeconds = 0.35f;
 
     [SerializeField]
-    private float weakShakeAmplitude = 0.03f;
+    private float weakShakeAmplitude = 0.05f;
 
     [SerializeField]
-    private float normalShakeAmplitude = 0.07f;
+    private float normalShakeAmplitude = 0.12f;
 
     [SerializeField]
-    private float strongShakeAmplitude = 0.14f;
+    private float strongShakeAmplitude = 0.22f;
 
     [SerializeField]
-    private int weakShakeMaxObjectCount = 3;
+    private int weakShakeMaxObjectCount = 2;
 
     [SerializeField]
     private int strongShakeMinObjectCount = 12;
@@ -56,6 +56,12 @@ public class CameraEffectControl : MonoBehaviour
     /// </summary>
     public void PlayShakeByFlyingObjectCount(int flyingObjectCount)
     {
+        if (flyingObjectCount <= 0)
+        {
+            PlayShake(normalShakeAmplitude);
+            return;
+        }
+
         if (flyingObjectCount <= weakShakeMaxObjectCount)
         {
             PlayShake(weakShakeAmplitude);
