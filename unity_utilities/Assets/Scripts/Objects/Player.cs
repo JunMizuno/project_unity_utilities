@@ -10,6 +10,8 @@ public class Player : MonoBehaviour
 
     public static readonly Subject<PlayerLaunchState> LaunchStartedSubject = new Subject<PlayerLaunchState>();
 
+    public static readonly Subject<PlayerCollisionState> CollisionSubject = new Subject<PlayerCollisionState>();
+
     public static readonly Subject<PlayerTargetHit> HitTargetSubject = new Subject<PlayerTargetHit>();
 
     [SerializeField]
@@ -196,6 +198,12 @@ public class Player : MonoBehaviour
     /// </summary>
     private void OnCollisionEnter(Collision collision)
     {
+        if (isLaunched)
+        {
+            var collisionPoint = collision.contactCount > 0 ? collision.GetContact(0).point : collision.collider.transform.position;
+            CollisionSubject.OnNext(new PlayerCollisionState(this, collision.collider, collisionPoint));
+        }
+
         if (hasHitTarget)
         {
             return;
@@ -459,6 +467,26 @@ public readonly struct PlayerLaunchState
         Player = player;
         LaunchDirection = launchDirection;
         PowerRate = powerRate;
+    }
+}
+
+public readonly struct PlayerCollisionState
+{
+    public readonly Player Player;
+
+    public readonly Collider Collider;
+
+    public readonly Vector3 HitPoint;
+
+    /// <summary>
+    /// Stores player collision data while the ball is launched.
+    /// ボール発射中のプレイヤー衝突情報を保持します。
+    /// </summary>
+    public PlayerCollisionState(Player player, Collider collider, Vector3 hitPoint)
+    {
+        Player = player;
+        Collider = collider;
+        HitPoint = hitPoint;
     }
 }
 

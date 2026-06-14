@@ -8,7 +8,7 @@ public class CameraManager : MonoBehaviour
         Manual,
         FollowTarget,
         LaunchChase,
-        ReturnToInitialPose,
+        ReturnToPose,
     }
 
     [SerializeField]
@@ -52,6 +52,13 @@ public class CameraManager : MonoBehaviour
     [SerializeField]
     private float returnToInitialCompleteAngle = 0.5f;
 
+    // Player Y position that cancels launch chase and returns the camera.
+    // Increase to return earlier while the ball is falling. Decrease to wait until it falls farther.
+    // 発射追従を解除してカメラを戻すプレイヤーY座標です。
+    // 上げると落下中に早く戻り、下げるとより深く落ちるまで待ちます。
+    [SerializeField]
+    private float launchChaseReturnYThreshold = -2.0f;
+
     private CameraMode cameraMode = CameraMode.Manual;
 
     private Transform launchChaseTarget;
@@ -63,6 +70,10 @@ public class CameraManager : MonoBehaviour
     private Vector3 initialCameraPosition;
 
     private Quaternion initialCameraRotation;
+
+    private Vector3 returnTargetPosition;
+
+    private Quaternion returnTargetRotation;
 
     /// <summary>
     /// Initializes the managed camera reference and stores the initial camera pose.
@@ -93,7 +104,12 @@ public class CameraManager : MonoBehaviour
             .Subscribe(state => StartLaunchChase(state.Player.transform, state.LaunchDirection))
             .AddTo(this);
 
-        Player.HitTargetSubject
+        Player.CollisionSubject
+            .Subscribe(_ => ReturnToInitialPose())
+            .AddTo(this);
+
+        Player.ReadyStateChangedSubject
+            .Where(state => state.IsReady)
             .Subscribe(_ => ReturnToInitialPose())
             .AddTo(this);
     }
@@ -118,8 +134,8 @@ public class CameraManager : MonoBehaviour
             case CameraMode.LaunchChase:
                 UpdateLaunchChase();
                 break;
-            case CameraMode.ReturnToInitialPose:
-                UpdateReturnToInitialPose();
+            case CameraMode.ReturnToPose:
+                UpdateReturnToPose();
                 break;
         }
     }
@@ -197,16 +213,27 @@ public class CameraManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Starts returning the camera to the pose captured at scene start.
-    /// シーン開始時に記録したカメラ姿勢へ戻り始めます。
+    /// Stops camera chase and starts returning to the specified pose.
+    /// カメラ追従を解除し、指定した姿勢へ戻り始めます。
     /// </summary>
-    public void ReturnToInitialPose()
+    public void ReturnToPose(Vector3 targetPosition, Quaternion targetRotation)
     {
         launchChaseTarget = null;
         launchChaseRigidbody = null;
         followTarget = null;
         lookAtTarget = null;
-        cameraMode = CameraMode.ReturnToInitialPose;
+        returnTargetPosition = targetPosition;
+        returnTargetRotation = targetRotation;
+        cameraMode = CameraMode.ReturnToPose;
+    }
+
+    /// <summary>
+    /// Stops camera chase and starts returning to the pose captured at scene start.
+    /// カメラ追従を解除し、シーン開始時に記録した姿勢へ戻り始めます。
+    /// </summary>
+    public void ReturnToInitialPose()
+    {
+        ReturnToPose(initialCameraPosition, initialCameraRotation);
     }
 
     /// <summary>
@@ -225,6 +252,15 @@ public class CameraManager : MonoBehaviour
     public void SetLaunchFollowHeight(float height)
     {
         launchFollowHeight = height;
+    }
+
+    /// <summary>
+    /// Sets the player Y position that cancels launch chase and returns the camera.
+    /// 発射追従を解除してカメラを戻すプレイヤーY座標を設定します。
+    /// </summary>
+    public void SetLaunchChaseReturnYThreshold(float threshold)
+    {
+        launchChaseReturnYThreshold = threshold;
     }
 
     /// <summary>
@@ -257,6 +293,12 @@ public class CameraManager : MonoBehaviour
             return;
         }
 
+        if (launchChaseTarget.position.y <= launchChaseReturnYThreshold)
+        {
+            ReturnToInitialPose();
+            return;
+        }
+
         var followDirection = GetLaunchChaseDirection();
         var targetPosition = launchChaseTarget.position
             - followDirection * launchFollowDistance
@@ -274,26 +316,26 @@ public class CameraManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Updates the camera until it reaches the initial scene pose.
-    /// シーン初期姿勢へ到達するまでカメラを更新します。
+    /// Updates the camera until it reaches the requested return pose.
+    /// 指定された復帰姿勢へ到達するまでカメラを更新します。
     /// </summary>
-    private void UpdateReturnToInitialPose()
+    private void UpdateReturnToPose()
     {
         controlledCamera.transform.position = Vector3.Lerp(
             controlledCamera.transform.position,
-            initialCameraPosition,
+            returnTargetPosition,
             GetFrameLerpRate(returnToInitialSmoothSpeed));
         controlledCamera.transform.rotation = Quaternion.Slerp(
             controlledCamera.transform.rotation,
-            initialCameraRotation,
+            returnTargetRotation,
             GetFrameLerpRate(returnToInitialSmoothSpeed));
 
-        var distance = Vector3.Distance(controlledCamera.transform.position, initialCameraPosition);
-        var angle = Quaternion.Angle(controlledCamera.transform.rotation, initialCameraRotation);
+        var distance = Vector3.Distance(controlledCamera.transform.position, returnTargetPosition);
+        var angle = Quaternion.Angle(controlledCamera.transform.rotation, returnTargetRotation);
         if (distance <= returnToInitialCompleteDistance && angle <= returnToInitialCompleteAngle)
         {
-            controlledCamera.transform.position = initialCameraPosition;
-            controlledCamera.transform.rotation = initialCameraRotation;
+            controlledCamera.transform.position = returnTargetPosition;
+            controlledCamera.transform.rotation = returnTargetRotation;
             cameraMode = CameraMode.Manual;
         }
     }
