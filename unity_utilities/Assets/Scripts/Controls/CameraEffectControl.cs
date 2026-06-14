@@ -7,21 +7,45 @@ public class CameraEffectControl : MonoBehaviour
     [SerializeField]
     private Camera targetCamera;
 
+    // Duration of the camera shake effect in seconds.
+    // Increase to keep shaking longer. Decrease to settle the camera sooner.
+    // カメラシェイクが続く秒数です。
+    // 上げると揺れが長く続き、下げると早く収まります。
     [SerializeField]
     private float shakeDurationSeconds = 0.35f;
 
+    // Shake amplitude used when only a few objects are moving.
+    // Increase to make small impacts more noticeable. Decrease to keep small impacts subtle.
+    // 少数のオブジェクトだけが動いているときの揺れ幅です。
+    // 上げると小さな衝突でも目立ち、下げると控えめになります。
     [SerializeField]
-    private float weakShakeAmplitude = 0.05f;
+    private float weakShakeAmplitude = 0.125f;
 
+    // Shake amplitude used for the default impact response.
+    // Increase to make normal impacts stronger. Decrease to reduce ordinary shake.
+    // 通常の衝突反応に使う揺れ幅です。
+    // 上げると通常衝突の揺れが強くなり、下げると控えめになります。
     [SerializeField]
-    private float normalShakeAmplitude = 0.12f;
+    private float normalShakeAmplitude = 0.3f;
 
+    // Shake amplitude used when many objects are moving.
+    // Increase to emphasize heavy impacts. Decrease to reduce strong-impact shake.
+    // 多数のオブジェクトが動いているときの揺れ幅です。
+    // 上げると大きな衝突をより強調し、下げると強衝突の揺れを抑えます。
     [SerializeField]
-    private float strongShakeAmplitude = 0.22f;
+    private float strongShakeAmplitude = 0.65f;
 
+    // Maximum moving object count that still uses weak shake.
+    // Increase to classify more impacts as weak. Decrease to move impacts into normal shake sooner.
+    // 弱い揺れとして扱う動的オブジェクト数の上限です。
+    // 上げると弱判定が増え、下げると通常揺れへ移りやすくなります。
     [SerializeField]
     private int weakShakeMaxObjectCount = 2;
 
+    // Minimum moving object count required for strong shake.
+    // Increase to require more flying objects for strong shake. Decrease to trigger strong shake more often.
+    // 強い揺れとして扱う動的オブジェクト数の下限です。
+    // 上げると強揺れに必要な飛散数が増え、下げると強揺れが出やすくなります。
     [SerializeField]
     private int strongShakeMinObjectCount = 12;
 
@@ -56,12 +80,16 @@ public class CameraEffectControl : MonoBehaviour
     /// </summary>
     public void PlayShakeByFlyingObjectCount(int flyingObjectCount)
     {
+        // Use normal shake when the impact event fired but the moving object count was not captured yet.
+        // 衝突イベントは発生したが動的オブジェクト数をまだ拾えていない場合は通常揺れを使います。
         if (flyingObjectCount <= 0)
         {
             PlayShake(normalShakeAmplitude);
             return;
         }
 
+        // Select weak, normal, or strong shake from the moving object count.
+        // 動的オブジェクト数から弱・通常・強の揺れを選択します。
         if (flyingObjectCount <= weakShakeMaxObjectCount)
         {
             PlayShake(weakShakeAmplitude);

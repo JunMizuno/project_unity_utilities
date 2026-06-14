@@ -432,9 +432,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraEffectControl
   targetCamera: {fileID: 0}
   shakeDurationSeconds: 0.35
-  weakShakeAmplitude: 0.05
-  normalShakeAmplitude: 0.12
-  strongShakeAmplitude: 0.22
+  weakShakeAmplitude: 0.125
+  normalShakeAmplitude: 0.3
+  strongShakeAmplitude: 0.65
   weakShakeMaxObjectCount: 2
   strongShakeMinObjectCount: 12
 --- !u!1 &876597852
