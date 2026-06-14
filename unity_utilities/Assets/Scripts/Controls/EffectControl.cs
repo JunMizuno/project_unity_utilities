@@ -13,11 +13,16 @@ public class EffectControl : MonoBehaviour
     [SerializeField]
     private FieldEffectControl fieldEffectControl;
 
+    [SerializeField]
+    private CameraEffectControl cameraEffectControl;
+
     public PostEffectControl PostEffect => postEffectControl;
 
     public ObjectEffectControl ObjectEffect => objectEffectControl;
 
     public FieldEffectControl FieldEffect => fieldEffectControl;
+
+    public CameraEffectControl CameraEffect => cameraEffectControl;
 
     /// <summary>
     /// Initializes the global effect controller and child effect references.
@@ -66,6 +71,11 @@ public class EffectControl : MonoBehaviour
         if (fieldEffectControl == null)
         {
             fieldEffectControl = GetComponentInChildren<FieldEffectControl>(true);
+        }
+
+        if (cameraEffectControl == null)
+        {
+            cameraEffectControl = GetComponentInChildren<CameraEffectControl>(true);
         }
     }
 }

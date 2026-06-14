@@ -56,6 +56,13 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     private float impactExplosionUpwardsModifier = 0.35f;
 
+    // Velocity threshold used to count blocks that are flying enough to affect camera shake.
+    // Increase to react only to faster blocks. Decrease to count smaller block movement.
+    // カメラシェイクに影響するほど飛んでいるブロックを数える速度しきい値です。
+    // 上げると速いブロックだけに反応し、下げると小さなブロックの動きも数えます。
+    [SerializeField]
+    private float cameraShakeFlyingVelocityThreshold = 0.3f;
+
     // Delay after impact before checking whether all blocks have stopped.
     // Increase to wait longer before returning the ball. Decrease to make the next shot ready sooner.
     // 衝突後、すべてのブロック停止を確認し始めるまでの待ち時間です。
@@ -355,6 +362,7 @@ public class CreateTargets : MonoBehaviour
 
         var force = Mathf.Lerp(minImpactExplosionForce, maxImpactExplosionForce, Mathf.Clamp01(hit.PowerRate));
         AddImpactExplosionForce(hit.HitPoint, force);
+        PlayCameraShakeByFlyingTargetCount();
         WaitForAllTargetsStoppedAsync(cancellationToken).Forget();
     }
 
@@ -372,6 +380,40 @@ public class CreateTargets : MonoBehaviour
                 target.AddExplosionImpulse(hitPoint, force, impactExplosionRadius, impactExplosionUpwardsModifier);
             }
         }
+    }
+
+    /// <summary>
+    /// Plays camera shake based on the number of moving targets.
+    /// 動いているターゲット数に応じてカメラシェイクを再生します。
+    /// </summary>
+    private void PlayCameraShakeByFlyingTargetCount()
+    {
+        var cameraEffectControl = EffectControl.Instance != null ? EffectControl.Instance.CameraEffect : null;
+        if (cameraEffectControl == null)
+        {
+            return;
+        }
+
+        cameraEffectControl.PlayShakeByFlyingObjectCount(CountFlyingTargetsForCameraShake());
+    }
+
+    /// <summary>
+    /// Counts targets moving fast enough to affect camera shake strength.
+    /// カメラシェイクの強さに影響する速度で動いているターゲット数を数えます。
+    /// </summary>
+    private int CountFlyingTargetsForCameraShake()
+    {
+        var count = 0;
+        foreach (Transform child in this.gameObject.transform)
+        {
+            var target = child.GetComponent<Target>();
+            if (target != null && target.IsMoving(cameraShakeFlyingVelocityThreshold))
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     /// <summary>
