@@ -1820,7 +1820,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WindForceControl
   isWindEnabled: 1
   windDirection: {x: 1, y: 0, z: 0}
-  windForce: 20
+  windForce: 10
   targetWindForce: 0.5
   windForceDecayRatePerFrame: 0.01
   forceMode: 0
