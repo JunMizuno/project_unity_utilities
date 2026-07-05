@@ -28,6 +28,13 @@ public class WindForceControl : MonoBehaviour
     [SerializeField]
     private float targetWindForce = 4.0f;
 
+    // Wind force decay rate applied each FixedUpdate for runtime targets.
+    // 0.01 means the current wind force weakens by 1% per physics frame. Increase to fade wind faster.
+    // 実行時対象へFixedUpdateごとに適用する風力の減衰率です。
+    // 0.01なら物理フレームごとに現在の風力が1%弱まります。上げると風が早く弱まります。
+    [SerializeField]
+    private float windForceDecayRatePerFrame = 0.01f;
+
     [SerializeField]
     private ForceMode forceMode = ForceMode.Force;
 
@@ -50,7 +57,7 @@ public class WindForceControl : MonoBehaviour
     [SerializeField]
     private List<Rigidbody> excludedRigidbodies = new List<Rigidbody>();
 
-    private readonly Dictionary<Rigidbody, float> runtimeWindForces = new Dictionary<Rigidbody, float>();
+    private readonly Dictionary<Rigidbody, WindForceState> runtimeWindForces = new Dictionary<Rigidbody, WindForceState>();
 
     private bool isWindActive;
 
@@ -117,6 +124,15 @@ public class WindForceControl : MonoBehaviour
     public void SetTargetWindForce(float force)
     {
         targetWindForce = force;
+    }
+
+    /// <summary>
+    /// Sets the per-frame wind force decay rate.
+    /// 1フレームごとの風力減衰率を設定します。
+    /// </summary>
+    public void SetWindForceDecayRatePerFrame(float decayRate)
+    {
+        windForceDecayRatePerFrame = Mathf.Clamp01(decayRate);
     }
 
     /// <summary>
@@ -193,7 +209,7 @@ public class WindForceControl : MonoBehaviour
     {
         if (targetRigidbody != null && !targetRigidbody.isKinematic)
         {
-            runtimeWindForces[targetRigidbody] = force;
+            runtimeWindForces[targetRigidbody] = new WindForceState(force);
         }
     }
 
@@ -227,14 +243,18 @@ public class WindForceControl : MonoBehaviour
     {
         RemoveMissingRuntimeRigidbodies();
 
+        var appliedRigidbodies = new List<Rigidbody>();
         foreach (var pair in runtimeWindForces)
         {
             var targetRigidbody = pair.Key;
             if (CanApplyWindToRuntimeRigidbody(targetRigidbody))
             {
-                ApplyWind(targetRigidbody, pair.Value);
+                ApplyWind(targetRigidbody, pair.Value.CurrentForce);
+                appliedRigidbodies.Add(targetRigidbody);
             }
         }
+
+        DecayRuntimeWindForces(appliedRigidbodies);
     }
 
     /// <summary>
@@ -245,6 +265,7 @@ public class WindForceControl : MonoBehaviour
     {
         return targetRigidbody != null
             && !targetRigidbody.isKinematic
+            && !targetRigidbody.IsSleeping()
             && IsInAffectedLayer(targetRigidbody.gameObject)
             && !IsExcluded(targetRigidbody);
     }
@@ -267,6 +288,25 @@ public class WindForceControl : MonoBehaviour
         foreach (var targetRigidbody in missingRigidbodies)
         {
             runtimeWindForces.Remove(targetRigidbody);
+        }
+    }
+
+    /// <summary>
+    /// Weakens wind force for rigidbodies that received wind this frame.
+    /// このフレームで風を受けたRigidbodyの風力を弱めます。
+    /// </summary>
+    private void DecayRuntimeWindForces(List<Rigidbody> appliedRigidbodies)
+    {
+        var decayMultiplier = 1.0f - Mathf.Clamp01(windForceDecayRatePerFrame);
+        foreach (var targetRigidbody in appliedRigidbodies)
+        {
+            if (!runtimeWindForces.TryGetValue(targetRigidbody, out var state))
+            {
+                continue;
+            }
+
+            state.Decay(decayMultiplier);
+            runtimeWindForces[targetRigidbody] = state;
         }
     }
 
@@ -301,5 +341,28 @@ public class WindForceControl : MonoBehaviour
     private bool IsExcluded(Rigidbody targetRigidbody)
     {
         return excludedRigidbodies.Contains(targetRigidbody);
+    }
+
+    private struct WindForceState
+    {
+        public float CurrentForce { get; private set; }
+
+        /// <summary>
+        /// Stores the current wind force for one runtime target.
+        /// 実行時対象1つ分の現在風力を保持します。
+        /// </summary>
+        public WindForceState(float initialForce)
+        {
+            CurrentForce = initialForce;
+        }
+
+        /// <summary>
+        /// Weakens the current wind force by the specified multiplier.
+        /// 指定倍率で現在風力を弱めます。
+        /// </summary>
+        public void Decay(float multiplier)
+        {
+            CurrentForce *= multiplier;
+        }
     }
 }
