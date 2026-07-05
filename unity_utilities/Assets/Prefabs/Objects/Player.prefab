@@ -162,6 +162,7 @@ MonoBehaviour:
   blobShadow: {fileID: 7043201741639774812}
   readyAlpha: 0.35
   launchedAlpha: 1
+  forceReturnAfterLaunchSeconds: 7
 --- !u!114 &3876873311603251431
 MonoBehaviour:
   m_ObjectHideFlags: 0

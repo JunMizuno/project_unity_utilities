@@ -55,6 +55,13 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float returnBallStableSeconds = 0.5f;
 
+    // Maximum seconds to wait after launch before forcing the ball back to launch-ready state.
+    // Increase to allow longer play after each shot. Decrease to recover from stuck shots sooner.
+    // 発射後、強制的に発射準備へ戻すまでの最大待機秒数です。
+    // 上げると1ショット後の猶予が長くなり、下げると詰まったショットから早く復帰します。
+    [SerializeField]
+    private float forceReturnAfterLaunchSeconds = 7.0f;
+
     private Material runtimeMaterial;
 
     private Vector3 initialLocalPosition;
@@ -70,6 +77,8 @@ public class Player : MonoBehaviour
     private bool isLaunched;
 
     private float ballStoppedSeconds;
+
+    private float launchedElapsedSeconds;
 
     public bool IsReady { get; private set; }
 
@@ -134,7 +143,7 @@ public class Player : MonoBehaviour
     /// </summary>
     private void Update()
     {
-        UpdateBallStoppedSeconds();
+        UpdateReturnTimers();
 
         if (!CanReturnToLaunchReady())
         {
@@ -184,12 +193,22 @@ public class Player : MonoBehaviour
         SetPlayerAlpha(launchedAlpha);
         hasHitTarget = false;
         ballStoppedSeconds = 0.0f;
+        launchedElapsedSeconds = 0.0f;
         currentPowerRate = Mathf.Clamp01(powerRate);
         isLaunched = true;
         LaunchedSubject.OnNext(this);
         LaunchStartedSubject.OnNext(new PlayerLaunchState(this, launchDirection.normalized, currentPowerRate));
         var launchForce = Mathf.Lerp(minLaunchForce, maxLaunchForce, currentPowerRate);
         rigidBody.AddForce(launchDirection.normalized * launchForce, ForceMode.Impulse);
+    }
+
+    /// <summary>
+    /// Sets the forced return wait time after launch.
+    /// 発射後の強制復帰待機時間を設定します。
+    /// </summary>
+    public void SetForceReturnAfterLaunchSeconds(float seconds)
+    {
+        forceReturnAfterLaunchSeconds = Mathf.Max(0.0f, seconds);
     }
 
     /// <summary>
@@ -248,6 +267,7 @@ public class Player : MonoBehaviour
         IsReady = ready;
         isLaunched = false;
         ballStoppedSeconds = 0.0f;
+        launchedElapsedSeconds = 0.0f;
 
         if (ready)
         {
@@ -294,7 +314,17 @@ public class Player : MonoBehaviour
     /// </summary>
     private bool CanReturnToLaunchReady()
     {
-        if (!isLaunched || !CreateTargets.AreAllGeneratedTargetsStopped())
+        if (!isLaunched)
+        {
+            return false;
+        }
+
+        if (IsForceReturnTimeReached())
+        {
+            return true;
+        }
+
+        if (!CreateTargets.AreAllGeneratedTargetsStopped())
         {
             return false;
         }
@@ -303,16 +333,19 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// Accumulates how long the launched ball has remained nearly stopped.
-    /// 発射後のボールがほぼ停止した状態を維持している時間を積算します。
+    /// Updates timers used by the launch return checks.
+    /// 発射後の復帰判定で使うタイマーを更新します。
     /// </summary>
-    private void UpdateBallStoppedSeconds()
+    private void UpdateReturnTimers()
     {
         if (!isLaunched || rigidBody == null)
         {
             ballStoppedSeconds = 0.0f;
+            launchedElapsedSeconds = 0.0f;
             return;
         }
+
+        launchedElapsedSeconds += Time.deltaTime;
 
         if (IsPlayerVelocityUnderReturnThreshold())
         {
@@ -330,6 +363,16 @@ public class Player : MonoBehaviour
     private bool IsPlayerNearlyStopped()
     {
         return ballStoppedSeconds >= returnBallStableSeconds;
+    }
+
+    /// <summary>
+    /// Returns whether the launched ball has exceeded the forced return wait time.
+    /// 発射後のボールが強制復帰までの待機時間を超えたかを返します。
+    /// </summary>
+    private bool IsForceReturnTimeReached()
+    {
+        return forceReturnAfterLaunchSeconds > 0.0f
+            && launchedElapsedSeconds >= forceReturnAfterLaunchSeconds;
     }
 
     /// <summary>
