@@ -799,6 +799,7 @@ MonoBehaviour:
   returnToInitialCompleteAngle: 0.5
   launchChaseReturnYThreshold: -2
   targetPlacementPreviewFrontOffset: 5
+  targetPlacementPreviewLayerStepZ: -0.2
 --- !u!4 &1581769054
 Transform:
   m_ObjectHideFlags: 0

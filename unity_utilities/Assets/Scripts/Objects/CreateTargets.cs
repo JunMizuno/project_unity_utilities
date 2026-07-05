@@ -9,6 +9,8 @@ public class CreateTargets : MonoBehaviour
 {
     public static readonly Subject<CreateTargets> TargetPlacementStartedSubject = new Subject<CreateTargets>();
 
+    public static readonly Subject<TargetPlacementLayerState> TargetPlacementLayerFixedSubject = new Subject<TargetPlacementLayerState>();
+
     public static readonly Subject<CreateTargets> TargetPlacementCompletedSubject = new Subject<CreateTargets>();
 
     public static readonly Subject<CreateTargets> AllTargetsStoppedSubject = new Subject<CreateTargets>();
@@ -278,8 +280,9 @@ public class CreateTargets : MonoBehaviour
     /// </summary>
     private async UniTaskVoid SettleTargetLayersAsync(CancellationToken cancellationToken)
     {
-        foreach (var layer in targetLayers)
+        for (var layerIndex = 0; layerIndex < targetLayers.Count; layerIndex++)
         {
+            var layer = targetLayers[layerIndex];
             if (isLaunchStarted || cancellationToken.IsCancellationRequested)
             {
                 return;
@@ -294,6 +297,7 @@ public class CreateTargets : MonoBehaviour
             }
 
             SetLayerPhysicsEnabled(layer, false);
+            TargetPlacementLayerFixedSubject.OnNext(new TargetPlacementLayerState(this, layerIndex, layerIndex + 1));
         }
 
         TargetPlacementCompletedSubject.OnNext(this);
@@ -545,5 +549,25 @@ public class CreateTargets : MonoBehaviour
         }
 
         return false;
+    }
+}
+
+public readonly struct TargetPlacementLayerState
+{
+    public readonly CreateTargets CreateTargets;
+
+    public readonly int LayerIndex;
+
+    public readonly int FixedLayerCount;
+
+    /// <summary>
+    /// Stores target placement progress after one layer has been fixed.
+    /// 1段分のターゲット固定後の配置進行情報を保持します。
+    /// </summary>
+    public TargetPlacementLayerState(CreateTargets createTargets, int layerIndex, int fixedLayerCount)
+    {
+        CreateTargets = createTargets;
+        LayerIndex = layerIndex;
+        FixedLayerCount = fixedLayerCount;
     }
 }

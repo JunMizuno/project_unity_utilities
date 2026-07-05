@@ -66,6 +66,13 @@ public class CameraManager : MonoBehaviour
     [SerializeField]
     private float targetPlacementPreviewFrontOffset = 5.0f;
 
+    // Z offset added every time one target layer is fixed during the setup camera preview.
+    // Use a negative value to move the camera Z backward per layer, and a positive value to move it forward.
+    // ステージ開始演出中、ターゲットが1段固定されるたびに加えるZ座標オフセットです。
+    // マイナス値なら段ごとにカメラZを後方へ、プラス値なら前方へ動かします。
+    [SerializeField]
+    private float targetPlacementPreviewLayerStepZ = -0.2f;
+
     private CameraMode cameraMode = CameraMode.Manual;
 
     private Transform launchChaseTarget;
@@ -81,6 +88,10 @@ public class CameraManager : MonoBehaviour
     private Vector3 returnTargetPosition;
 
     private Quaternion returnTargetRotation;
+
+    private Vector3 targetPlacementPreviewBasePosition;
+
+    private bool isTargetPlacementPreviewActive;
 
     /// <summary>
     /// Initializes the managed camera reference and stores the initial camera pose.
@@ -111,8 +122,17 @@ public class CameraManager : MonoBehaviour
             .Subscribe(MoveToTargetPlacementPreview)
             .AddTo(this);
 
+        CreateTargets.TargetPlacementLayerFixedSubject
+            .Where(state => state.CreateTargets != null)
+            .Subscribe(UpdateTargetPlacementPreviewLayer)
+            .AddTo(this);
+
         CreateTargets.TargetPlacementCompletedSubject
-            .Subscribe(_ => ReturnToInitialPose())
+            .Subscribe(_ =>
+            {
+                isTargetPlacementPreviewActive = false;
+                ReturnToInitialPose();
+            })
             .AddTo(this);
 
         Player.LaunchStartedSubject
@@ -263,8 +283,25 @@ public class CameraManager : MonoBehaviour
             return;
         }
 
-        var previewPosition = initialCameraPosition;
-        previewPosition.z = targets.transform.position.z - targetPlacementPreviewFrontOffset;
+        targetPlacementPreviewBasePosition = initialCameraPosition;
+        targetPlacementPreviewBasePosition.z = targets.transform.position.z - targetPlacementPreviewFrontOffset;
+        isTargetPlacementPreviewActive = true;
+        ReturnToPose(targetPlacementPreviewBasePosition, initialCameraRotation);
+    }
+
+    /// <summary>
+    /// Updates the setup camera preview when a target layer is fixed.
+    /// ターゲットが1段固定されたときにステージ開始カメラ演出を更新します。
+    /// </summary>
+    public void UpdateTargetPlacementPreviewLayer(TargetPlacementLayerState state)
+    {
+        if (!isTargetPlacementPreviewActive)
+        {
+            return;
+        }
+
+        var previewPosition = targetPlacementPreviewBasePosition;
+        previewPosition.z += targetPlacementPreviewLayerStepZ * state.FixedLayerCount;
         ReturnToPose(previewPosition, initialCameraRotation);
     }
 
@@ -302,6 +339,15 @@ public class CameraManager : MonoBehaviour
     public void SetTargetPlacementPreviewFrontOffset(float offset)
     {
         targetPlacementPreviewFrontOffset = Mathf.Max(0.0f, offset);
+    }
+
+    /// <summary>
+    /// Sets the per-layer Z offset used during the target placement camera preview.
+    /// ターゲット配置カメラ演出で段ごとに加えるZ座標オフセットを設定します。
+    /// </summary>
+    public void SetTargetPlacementPreviewLayerStepZ(float stepZ)
+    {
+        targetPlacementPreviewLayerStepZ = stepZ;
     }
 
     /// <summary>
