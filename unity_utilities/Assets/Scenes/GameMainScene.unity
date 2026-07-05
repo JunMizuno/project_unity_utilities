@@ -292,6 +292,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 326786536}
+  - component: {fileID: 326786537}
   m_Layer: 0
   m_Name: UIs
   m_TagString: Untagged
@@ -316,6 +317,25 @@ Transform:
   - {fileID: 3000000002}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &326786537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 326786535}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5eb3c5cd791a4ea88f49d921786805c1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::DebugReloadButton
+  buttonText: RELOAD
+  anchoredPosition: {x: 8, y: -84}
+  buttonSize: {x: 118, y: 44}
+  fontSize: 22
+  buttonColor: {r: 0.08, g: 0.08, b: 0.08, a: 0.72}
+  buttonPressedColor: {r: 0.18, g: 0.18, b: 0.18, a: 0.86}
+  textColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &413658282
 GameObject:
   m_ObjectHideFlags: 0

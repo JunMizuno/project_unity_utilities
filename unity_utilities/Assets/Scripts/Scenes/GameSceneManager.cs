@@ -73,6 +73,30 @@ public class GameSceneManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Reloads the main game scene from its initial state.
+    /// メインゲームシーンを初期状態から読み込み直します。
+    /// </summary>
+    public void ReloadGameMainScene()
+    {
+        ReloadScene(SceneControl.SCENE_NUM.GameMain);
+    }
+
+    /// <summary>
+    /// Reloads the currently active content scene.
+    /// 現在のコンテンツシーンを読み込み直します。
+    /// </summary>
+    public void ReloadCurrentContentScene()
+    {
+        if (currentContentScene == SceneControl.SCENE_NUM.None)
+        {
+            LoadScene(initialScene);
+            return;
+        }
+
+        ReloadScene(currentContentScene);
+    }
+
+    /// <summary>
     /// Starts loading the requested content scene.
     /// 指定したコンテンツシーンの読み込みを開始します。
     /// </summary>
@@ -84,6 +108,20 @@ public class GameSceneManager : MonoBehaviour
         }
 
         LoadSceneAsync(scene).Forget();
+    }
+
+    /// <summary>
+    /// Starts reloading the requested content scene.
+    /// 指定したコンテンツシーンの再読み込みを開始します。
+    /// </summary>
+    public void ReloadScene(SceneControl.SCENE_NUM scene)
+    {
+        if (scene == SceneControl.SCENE_NUM.None || isLoading)
+        {
+            return;
+        }
+
+        ReloadSceneAsync(scene).Forget();
     }
 
     /// <summary>
@@ -130,6 +168,53 @@ public class GameSceneManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Unloads and loads the requested content scene to rebuild it from the beginning.
+    /// 指定したコンテンツシーンをアンロードしてから読み込み、最初から作り直します。
+    /// </summary>
+    private async UniTaskVoid ReloadSceneAsync(SceneControl.SCENE_NUM scene)
+    {
+        isLoading = true;
+        try
+        {
+            var sceneName = SceneControl.GetSceneName(scene);
+            if (string.IsNullOrEmpty(sceneName))
+            {
+                return;
+            }
+
+            var loadedScene = SceneManager.GetSceneByName(sceneName);
+            if (loadedScene.IsValid() && loadedScene.isLoaded)
+            {
+                SetActiveSceneIfLoaded(SceneControl.SCENE_NUM.GameControl);
+                var unloadOperation = SceneManager.UnloadSceneAsync(loadedScene);
+                if (unloadOperation != null)
+                {
+                    await unloadOperation.ToUniTask();
+                }
+            }
+
+            var loadOperation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            if (loadOperation == null)
+            {
+                return;
+            }
+
+            await loadOperation.ToUniTask();
+            loadedScene = SceneManager.GetSceneByName(sceneName);
+            if (loadedScene.IsValid())
+            {
+                SceneManager.SetActiveScene(loadedScene);
+            }
+
+            currentContentScene = scene;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    /// <summary>
     /// Unloads the previous content scene while keeping the game control scene alive.
     /// ゲーム管理シーンを残したまま、直前のコンテンツシーンをアンロードします。
     /// </summary>
@@ -160,6 +245,25 @@ public class GameSceneManager : MonoBehaviour
         if (unloadOperation != null)
         {
             await unloadOperation.ToUniTask();
+        }
+    }
+
+    /// <summary>
+    /// Sets the specified loaded scene as active when it is available.
+    /// 指定したシーンが読み込み済みの場合にアクティブシーンへ設定します。
+    /// </summary>
+    private void SetActiveSceneIfLoaded(SceneControl.SCENE_NUM scene)
+    {
+        var sceneName = SceneControl.GetSceneName(scene);
+        if (string.IsNullOrEmpty(sceneName))
+        {
+            return;
+        }
+
+        var loadedScene = SceneManager.GetSceneByName(sceneName);
+        if (loadedScene.IsValid() && loadedScene.isLoaded)
+        {
+            SceneManager.SetActiveScene(loadedScene);
         }
     }
 }
