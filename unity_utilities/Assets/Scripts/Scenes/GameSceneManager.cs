@@ -6,12 +6,12 @@ public class GameSceneManager : MonoBehaviour
 {
     public static GameSceneManager Instance { get; private set; }
 
-    // Temporary in-game development setting.
-    // Restore this to SceneControl.SCENE_NUM.Title when the title flow is needed again.
-    // インゲーム実装確認用の一時設定です。
-    // タイトル導線を戻すときは SceneControl.SCENE_NUM.Title に戻してください。
+    // Initial content scene loaded after the game control scene starts.
+    // Change this for temporary in-game development checks when needed.
+    // ゲーム管理シーン開始後に読み込む初期コンテンツシーンです。
+    // インゲーム実装確認時など、必要に応じて一時的に変更します。
     [SerializeField]
-    private SceneControl.SCENE_NUM initialScene = SceneControl.SCENE_NUM.GameMain;
+    private SceneControl.SCENE_NUM initialScene = SceneControl.SCENE_NUM.Title;
 
     private SceneControl.SCENE_NUM currentContentScene = SceneControl.SCENE_NUM.None;
 

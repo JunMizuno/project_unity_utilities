@@ -71,7 +71,7 @@ public class CameraManager : MonoBehaviour
     // ステージ開始演出中、ターゲットが1段固定されるたびに加えるZ座標オフセットです。
     // マイナス値なら段ごとにカメラZを後方へ、プラス値なら前方へ動かします。
     [SerializeField]
-    private float targetPlacementPreviewLayerStepZ = -0.2f;
+    private float targetPlacementPreviewLayerStepZ = -0.5f;
 
     private CameraMode cameraMode = CameraMode.Manual;
 
