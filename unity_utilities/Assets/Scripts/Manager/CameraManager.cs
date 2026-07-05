@@ -59,6 +59,13 @@ public class CameraManager : MonoBehaviour
     [SerializeField]
     private float launchChaseReturnYThreshold = -2.0f;
 
+    // Distance kept in front of the target placement root during the setup camera preview.
+    // Increase to keep the camera farther from the stacked blocks. Decrease to move closer.
+    // ターゲット配置ルートの手前に保つステージ開始演出用の距離です。
+    // 上げると積み上がるブロックから遠くなり、下げると近づきます。
+    [SerializeField]
+    private float targetPlacementPreviewFrontOffset = 5.0f;
+
     private CameraMode cameraMode = CameraMode.Manual;
 
     private Transform launchChaseTarget;
@@ -99,6 +106,15 @@ public class CameraManager : MonoBehaviour
     /// </summary>
     private void Start()
     {
+        CreateTargets.TargetPlacementStartedSubject
+            .Where(targets => targets != null)
+            .Subscribe(MoveToTargetPlacementPreview)
+            .AddTo(this);
+
+        CreateTargets.TargetPlacementCompletedSubject
+            .Subscribe(_ => ReturnToInitialPose())
+            .AddTo(this);
+
         Player.LaunchStartedSubject
             .Where(state => state.Player != null)
             .Subscribe(state => StartLaunchChase(state.Player.transform, state.LaunchDirection))
@@ -237,6 +253,22 @@ public class CameraManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Moves the camera toward the target placement root while keeping initial X and Y positions.
+    /// 初期X座標とY座標を保ったまま、ターゲット配置ルートへカメラを近づけます。
+    /// </summary>
+    public void MoveToTargetPlacementPreview(CreateTargets targets)
+    {
+        if (targets == null)
+        {
+            return;
+        }
+
+        var previewPosition = initialCameraPosition;
+        previewPosition.z = targets.transform.position.z - targetPlacementPreviewFrontOffset;
+        ReturnToPose(previewPosition, initialCameraRotation);
+    }
+
+    /// <summary>
     /// Sets the distance kept behind the launched target.
     /// 発射対象の後ろへ保つ距離を設定します。
     /// </summary>
@@ -261,6 +293,15 @@ public class CameraManager : MonoBehaviour
     public void SetLaunchChaseReturnYThreshold(float threshold)
     {
         launchChaseReturnYThreshold = threshold;
+    }
+
+    /// <summary>
+    /// Sets the front offset used for the target placement camera preview.
+    /// ターゲット配置カメラ演出で使う手前距離を設定します。
+    /// </summary>
+    public void SetTargetPlacementPreviewFrontOffset(float offset)
+    {
+        targetPlacementPreviewFrontOffset = Mathf.Max(0.0f, offset);
     }
 
     /// <summary>

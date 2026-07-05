@@ -7,6 +7,8 @@ using R3;
 
 public class CreateTargets : MonoBehaviour
 {
+    public static readonly Subject<CreateTargets> TargetPlacementStartedSubject = new Subject<CreateTargets>();
+
     public static readonly Subject<CreateTargets> TargetPlacementCompletedSubject = new Subject<CreateTargets>();
 
     public static readonly Subject<CreateTargets> AllTargetsStoppedSubject = new Subject<CreateTargets>();
@@ -186,6 +188,7 @@ public class CreateTargets : MonoBehaviour
             .Subscribe(_ =>
             {
                 trigger = true;
+                TargetPlacementStartedSubject.OnNext(this);
                 CreateTargetObjects();
                 SettleTargetLayersAsync(this.GetCancellationTokenOnDestroy()).Forget();
             })
