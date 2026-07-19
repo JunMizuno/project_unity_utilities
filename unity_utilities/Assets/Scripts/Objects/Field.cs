@@ -33,6 +33,13 @@ public class Field : MonoBehaviour
     [SerializeField]
     private float axisLoopSeconds = 4.0f;
 
+    // Runtime flag that controls whether field movement is active.
+    // Keep false during setup presentation, true during launch-ready play, and false after block impact.
+    // フィールド移動が有効かどうかを制御する実行時フラグです。
+    // 配置演出中はfalse、発射準備中はtrue、ブロック衝突後はfalseにします。
+    [SerializeField]
+    private bool isMovementEnabled;
+
     private Vector3 initialLocalPosition;
 
     private float elapsedSeconds;
@@ -52,7 +59,10 @@ public class Field : MonoBehaviour
     /// </summary>
     private void Start()
     {
+        SetMovementEvents();
+
         Observable.EveryUpdate()
+            .Where(_ => isMovementEnabled)
             .Subscribe(_ => UpdateFieldMovement())
             .AddTo(this);
     }
@@ -82,6 +92,31 @@ public class Field : MonoBehaviour
     public void SetAxisLoopSeconds(float seconds)
     {
         axisLoopSeconds = Mathf.Max(0.01f, seconds);
+    }
+
+    /// <summary>
+    /// Changes whether the field movement is active.
+    /// フィールド移動が有効かどうかを切り替えます。
+    /// </summary>
+    public void SetMovementEnabled(bool enabled)
+    {
+        isMovementEnabled = enabled;
+    }
+
+    /// <summary>
+    /// Subscribes to player state events that control field movement.
+    /// フィールド移動を制御するプレイヤー状態イベントを購読します。
+    /// </summary>
+    private void SetMovementEvents()
+    {
+        Player.ReadyStateChangedSubject
+            .Where(state => state.IsReady)
+            .Subscribe(_ => SetMovementEnabled(true))
+            .AddTo(this);
+
+        Player.HitTargetSubject
+            .Subscribe(_ => SetMovementEnabled(false))
+            .AddTo(this);
     }
 
     /// <summary>
