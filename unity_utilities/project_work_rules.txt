@@ -76,3 +76,10 @@ If the conversation or task becomes large, the assistant should warn the user th
 会話や作業が大きくなってきた場合、アシスタントは一度区切る、または作業を分割するのがよさそうだとユーザーに知らせます。
 This warning is based on work size and context length, not on exact account usage numbers.
 この通知は作業量や会話の長さに基づくもので、正確なアカウント使用量に基づくものではありません。
+
+9. Scene hierarchy placement policy
+9. シーンヒエラルキー配置方針
+Place UI and editor-adjusted objects in the scene hierarchy whenever practical instead of creating them dynamically in scripts.
+UIやエディター上で調整するオブジェクトは、実用上可能な限りスクリプト内で動的生成せず、シーンヒエラルキーに配置します。
+Scripts should primarily reference and control scene-placed objects, while gameplay data-driven objects may still be generated at play time when planned.
+スクリプトは主にシーン配置済みオブジェクトを参照・制御し、ゲームデータに基づく生成予定のオブジェクトは必要に応じてプレイ時生成を許容します。
