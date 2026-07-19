@@ -83,6 +83,21 @@ public class Target : MonoBehaviour
     }
 
     /// <summary>
+    /// Moves this target by the field movement delta without changing its physics mode.
+    /// 物理モードを変えずに、フィールドの移動差分だけこのターゲットを移動します。
+    /// </summary>
+    public void MoveByFieldDelta(Vector3 worldDelta)
+    {
+        if (rigidBody == null)
+        {
+            transform.position += worldDelta;
+            return;
+        }
+
+        rigidBody.position += worldDelta;
+    }
+
+    /// <summary>
     /// Applies an explosion impulse to this target.
     /// このターゲットへ爆発方向の瞬間的な力を加えます。
     /// </summary>

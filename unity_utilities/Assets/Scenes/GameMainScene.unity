@@ -580,6 +580,7 @@ MonoBehaviour:
   layerFixIntervalSeconds: 0.2
   initialCreateDelaySeconds: 0.2
   useVerticalOnlyPhysicsBeforeHit: 1
+  followFieldMovementBeforeHit: 1
   minImpactExplosionForce: 4
   maxImpactExplosionForce: 8
   impactExplosionRadius: 3

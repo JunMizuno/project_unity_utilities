@@ -39,6 +39,13 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     private bool useVerticalOnlyPhysicsBeforeHit = true;
 
+    // Moves generated targets together with the field until the first ball hit.
+    // Turn on to keep stacked blocks aligned with a horizontally moving field before impact.
+    // 初回のボール衝突まで、生成済みターゲットをフィールド移動に合わせて動かします。
+    // オンにすると、衝突前に横移動するフィールドと積み上がったブロックの位置を合わせ続けます。
+    [SerializeField]
+    private bool followFieldMovementBeforeHit = true;
+
     // Minimum additional force applied when the ball hits targets with weak launch power.
     // Increase to make even weak shots scatter blocks more. Decrease to keep weak shots calmer.
     // 弱い発射威力でターゲットに当たったときに加える追加の最小衝撃力です。
@@ -198,6 +205,11 @@ public class CreateTargets : MonoBehaviour
                 SetTargetPhysicsEnabled(true);
                 AddImpactExplosionForceAsync(hit, this.GetCancellationTokenOnDestroy()).Forget();
             })
+            .AddTo(this);
+
+        Field.MovementChangedSubject
+            .Where(_ => followFieldMovementBeforeHit && !isTargetPhysicsReleased)
+            .Subscribe(state => MoveTargetsWithField(state.WorldDelta))
             .AddTo(this);
 
         Observable.Timer(TimeSpan.FromSeconds(initialCreateDelaySeconds))
@@ -412,6 +424,22 @@ public class CreateTargets : MonoBehaviour
             if (target != null)
             {
                 target.SetVerticalPhysicsOnly();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Moves generated targets together with the field before full physics release.
+    /// 完全な物理解放前に、生成済みターゲットをフィールドと一緒に移動します。
+    /// </summary>
+    private void MoveTargetsWithField(Vector3 worldDelta)
+    {
+        foreach (Transform child in this.gameObject.transform)
+        {
+            var target = child.GetComponent<Target>();
+            if (target != null)
+            {
+                target.MoveByFieldDelta(worldDelta);
             }
         }
     }

@@ -16,6 +16,8 @@ public enum FieldMovePattern
 
 public class Field : MonoBehaviour
 {
+    public static readonly Subject<FieldMovementState> MovementChangedSubject = new Subject<FieldMovementState>();
+
     [SerializeField]
     private FieldMovePattern movePattern = FieldMovePattern.SequentialAxes;
 
@@ -42,6 +44,8 @@ public class Field : MonoBehaviour
 
     private Vector3 initialLocalPosition;
 
+    private Vector3 lastWorldPosition;
+
     private float elapsedSeconds;
 
     /// <summary>
@@ -51,6 +55,7 @@ public class Field : MonoBehaviour
     private void Awake()
     {
         initialLocalPosition = transform.localPosition;
+        lastWorldPosition = transform.position;
     }
 
     /// <summary>
@@ -101,6 +106,7 @@ public class Field : MonoBehaviour
     public void SetMovementEnabled(bool enabled)
     {
         isMovementEnabled = enabled;
+        lastWorldPosition = transform.position;
     }
 
     /// <summary>
@@ -127,6 +133,25 @@ public class Field : MonoBehaviour
     {
         elapsedSeconds += Time.deltaTime;
         transform.localPosition = initialLocalPosition + CalculateMoveOffset();
+        PublishMovementDelta();
+    }
+
+    /// <summary>
+    /// Publishes the field movement delta for objects that should follow the moving field.
+    /// 動くフィールドに追従するべきオブジェクトへフィールドの移動差分を通知します。
+    /// </summary>
+    private void PublishMovementDelta()
+    {
+        var currentWorldPosition = transform.position;
+        var worldDelta = currentWorldPosition - lastWorldPosition;
+        lastWorldPosition = currentWorldPosition;
+
+        if (worldDelta == Vector3.zero)
+        {
+            return;
+        }
+
+        MovementChangedSubject.OnNext(new FieldMovementState(this, worldDelta));
     }
 
     /// <summary>
@@ -216,5 +241,22 @@ public class Field : MonoBehaviour
     {
         var clampedValue = Mathf.Clamp01(value);
         return clampedValue * clampedValue * (3.0f - 2.0f * clampedValue);
+    }
+}
+
+public readonly struct FieldMovementState
+{
+    public readonly Field Field;
+
+    public readonly Vector3 WorldDelta;
+
+    /// <summary>
+    /// Stores a field movement delta for objects that should follow the field.
+    /// フィールドに追従するオブジェクト向けにフィールドの移動差分を保持します。
+    /// </summary>
+    public FieldMovementState(Field field, Vector3 worldDelta)
+    {
+        Field = field;
+        WorldDelta = worldDelta;
     }
 }
