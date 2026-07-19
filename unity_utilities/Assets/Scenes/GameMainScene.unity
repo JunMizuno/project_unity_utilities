@@ -586,6 +586,10 @@ MonoBehaviour:
   maxImpactExplosionForce: 8
   impactExplosionRadius: 3
   impactExplosionUpwardsModifier: 0.35
+  minImpactBallSpeed: 2
+  maxImpactBallSpeed: 30
+  minImpactSpeedMultiplier: 0.25
+  maxImpactSpeedMultiplier: 1
   targetStopCheckDelaySeconds: 1
   targetStopVelocityThreshold: 0.05
   targetStoppedYThreshold: 0

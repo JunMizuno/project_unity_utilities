@@ -74,6 +74,34 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     private float impactExplosionUpwardsModifier = 0.35f;
 
+    // Ball speed that applies the lowest impact force multiplier.
+    // Increase to make slowed balls lose impact more easily. Decrease to keep force even at lower speed.
+    // 最低衝撃力倍率になるボール速度です。
+    // 上げると減速したボールの衝撃が弱くなりやすく、下げると低速でも力が残りやすくなります。
+    [SerializeField]
+    private float minImpactBallSpeed = 2.0f;
+
+    // Ball speed that applies the highest impact force multiplier.
+    // Increase to require faster hits for full scatter. Decrease to reach full force at lower speed.
+    // 最大衝撃力倍率になるボール速度です。
+    // 上げると最大散らばりに必要な速度が高くなり、下げると低速でも最大に近づきます。
+    [SerializeField]
+    private float maxImpactBallSpeed = 30.0f;
+
+    // Impact multiplier used when the ball reaches targets at or below minImpactBallSpeed.
+    // Increase to let slow balls still scatter blocks. Decrease to make distance loss more severe.
+    // ボール速度がminImpactBallSpeed以下でターゲットに届いたときの衝撃倍率です。
+    // 上げると低速でもブロックが散りやすくなり、下げると距離による減衰が強くなります。
+    [SerializeField]
+    private float minImpactSpeedMultiplier = 0.25f;
+
+    // Impact multiplier used when the ball reaches targets at or above maxImpactBallSpeed.
+    // Increase above 1 to reward high-speed hits more. Decrease to cap strong hits lower.
+    // ボール速度がmaxImpactBallSpeed以上でターゲットに届いたときの衝撃倍率です。
+    // 1より上げると高速衝突がより強くなり、下げると強い衝突の上限が抑えられます。
+    [SerializeField]
+    private float maxImpactSpeedMultiplier = 1.0f;
+
     // Velocity threshold used to count blocks that are flying enough to affect camera shake.
     // Increase to react only to faster blocks. Decrease to count smaller block movement.
     // カメラシェイクに影響するほど飛んでいるブロックを数える速度しきい値です。
@@ -456,7 +484,7 @@ public class CreateTargets : MonoBehaviour
             return;
         }
 
-        var force = Mathf.Lerp(minImpactExplosionForce, maxImpactExplosionForce, Mathf.Clamp01(hit.PowerRate));
+        var force = CalculateImpactExplosionForce(hit);
         AddImpactExplosionForce(hit.HitPoint, force);
 
         isCanceled = await UniTask.WaitForFixedUpdate(cancellationToken).SuppressCancellationThrow();
@@ -483,6 +511,19 @@ public class CreateTargets : MonoBehaviour
                 target.AddExplosionImpulse(hitPoint, force, impactExplosionRadius, impactExplosionUpwardsModifier);
             }
         }
+    }
+
+    /// <summary>
+    /// Calculates impact force from launch power and the ball speed at target collision.
+    /// 発射威力とターゲット衝突時のボール速度から衝撃力を計算します。
+    /// </summary>
+    private float CalculateImpactExplosionForce(PlayerTargetHit hit)
+    {
+        var baseForce = Mathf.Lerp(minImpactExplosionForce, maxImpactExplosionForce, Mathf.Clamp01(hit.PowerRate));
+        var safeMaxImpactBallSpeed = Mathf.Max(maxImpactBallSpeed, minImpactBallSpeed + 0.01f);
+        var speedRate = Mathf.InverseLerp(minImpactBallSpeed, safeMaxImpactBallSpeed, hit.BallSpeed);
+        var speedMultiplier = Mathf.Lerp(minImpactSpeedMultiplier, maxImpactSpeedMultiplier, speedRate);
+        return baseForce * speedMultiplier;
     }
 
     /// <summary>

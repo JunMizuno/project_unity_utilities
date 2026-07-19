@@ -236,7 +236,8 @@ public class Player : MonoBehaviour
 
         hasHitTarget = true;
         var hitPoint = collision.contactCount > 0 ? collision.GetContact(0).point : collision.collider.transform.position;
-        HitTargetSubject.OnNext(new PlayerTargetHit(target, hitPoint, currentPowerRate));
+        var ballVelocity = rigidBody != null ? rigidBody.linearVelocity : Vector3.zero;
+        HitTargetSubject.OnNext(new PlayerTargetHit(target, hitPoint, currentPowerRate, ballVelocity));
     }
 
     /// <summary>
@@ -541,15 +542,31 @@ public readonly struct PlayerTargetHit
 
     public readonly float PowerRate;
 
+    public readonly Vector3 BallVelocity;
+
+    public readonly float BallSpeed;
+
     /// <summary>
     /// Stores data for the player's first target collision.
     /// プレイヤーが最初にターゲットへ衝突した情報を保持します。
     /// </summary>
     public PlayerTargetHit(Target target, Vector3 hitPoint, float powerRate)
+        : this(target, hitPoint, powerRate, Vector3.zero)
+    {
+
+    }
+
+    /// <summary>
+    /// Stores data for the player's first target collision with impact velocity.
+    /// プレイヤーが最初にターゲットへ衝突した速度込みの情報を保持します。
+    /// </summary>
+    public PlayerTargetHit(Target target, Vector3 hitPoint, float powerRate, Vector3 ballVelocity)
     {
         Target = target;
         HitPoint = hitPoint;
         PowerRate = powerRate;
+        BallVelocity = ballVelocity;
+        BallSpeed = ballVelocity.magnitude;
     }
 }
 
