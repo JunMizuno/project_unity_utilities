@@ -600,6 +600,7 @@ MonoBehaviour:
   initialCreateDelaySeconds: 0.2
   useVerticalOnlyPhysicsBeforeHit: 1
   followFieldMovementBeforeHit: 1
+  followFieldMovementAfterHit: 1
   minImpactExplosionForce: 4
   maxImpactExplosionForce: 8
   impactExplosionRadius: 3

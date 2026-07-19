@@ -46,6 +46,13 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     private bool followFieldMovementBeforeHit = true;
 
+    // Moves generated targets together with the field after the first ball hit.
+    // Turn on to keep collapsed blocks affected by field movement after impact.
+    // 初回のボール衝突後も、生成済みターゲットをフィールド移動に合わせて動かします。
+    // オンにすると、崩れた後のブロックもフィールド移動の影響を受け続けます。
+    [SerializeField]
+    private bool followFieldMovementAfterHit = true;
+
     // Minimum additional force applied when the ball hits targets with weak launch power.
     // Increase to make even weak shots scatter blocks more. Decrease to keep weak shots calmer.
     // 弱い発射威力でターゲットに当たったときに加える追加の最小衝撃力です。
@@ -236,7 +243,7 @@ public class CreateTargets : MonoBehaviour
             .AddTo(this);
 
         Field.MovementChangedSubject
-            .Where(_ => followFieldMovementBeforeHit && !isTargetPhysicsReleased)
+            .Where(_ => ShouldMoveTargetsWithField())
             .Subscribe(state => MoveTargetsWithField(state.WorldDelta))
             .AddTo(this);
 
@@ -457,8 +464,18 @@ public class CreateTargets : MonoBehaviour
     }
 
     /// <summary>
-    /// Moves generated targets together with the field before full physics release.
-    /// 完全な物理解放前に、生成済みターゲットをフィールドと一緒に移動します。
+    /// Returns whether generated targets should move together with the field.
+    /// 生成済みターゲットをフィールドと一緒に移動すべきかを返します。
+    /// </summary>
+    private bool ShouldMoveTargetsWithField()
+    {
+        return (!isTargetPhysicsReleased && followFieldMovementBeforeHit)
+            || (isTargetPhysicsReleased && followFieldMovementAfterHit);
+    }
+
+    /// <summary>
+    /// Moves generated targets together with the field.
+    /// 生成済みターゲットをフィールドと一緒に移動します。
     /// </summary>
     private void MoveTargetsWithField(Vector3 worldDelta)
     {
