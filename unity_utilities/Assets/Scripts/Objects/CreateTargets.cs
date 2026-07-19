@@ -154,9 +154,35 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     private float targetStopViewportPadding = 0.05f;
 
+    // Viewport padding used when deciding that a target has left the screen for scoring.
+    // Increase to score only after targets move farther offscreen. Decrease to score near the screen edge.
+    // スコア加算用にターゲットが画面外へ出たとみなす表示範囲の余白です。
+    // 上げるとより画面外へ離れてから加点し、下げると画面端付近で加点しやすくなります。
+    [SerializeField]
+    private float targetScoreViewportPadding = 0.1f;
+
+    [SerializeField]
+    private Collider scoreFieldCollider;
+
+    // Horizontal padding added to the field bounds used for scoring.
+    // Increase to wait until targets move farther outside the field. Decrease to score closer to the field edge.
+    // スコア加算用のフィールド範囲に追加する水平余白です。
+    // 上げるとフィールド外へより離れてから加点し、下げるとフィールド端付近で加点しやすくなります。
+    [SerializeField]
+    private float targetScoreFieldOutPadding = 0.75f;
+
+    // Vertical distance below the field bounds used to score fallen targets.
+    // Increase to require targets to fall farther below the field. Decrease to score fallen targets sooner.
+    // フィールド範囲より下に落ちたターゲットをスコア加算するための垂直距離です。
+    // 上げるとより下まで落ちてから加点し、下げると落下後に早く加点します。
+    [SerializeField]
+    private float targetScoreFallenBelowFieldDistance = 1.0f;
+
     private bool trigger = default;
 
     private readonly List<List<Target>> targetLayers = new List<List<Target>>();
+
+    private readonly HashSet<Target> scoredTargets = new HashSet<Target>();
 
     private bool isLaunchStarted;
 
@@ -195,6 +221,15 @@ public class CreateTargets : MonoBehaviour
         if (mainCamera == null)
         {
             mainCamera = Camera.main;
+        }
+
+        if (scoreFieldCollider == null)
+        {
+            var field = FindFirstObjectByType<Field>();
+            if (field != null)
+            {
+                scoreFieldCollider = field.GetComponent<Collider>();
+            }
         }
 
         if (!Instances.Contains(this))
@@ -273,7 +308,7 @@ public class CreateTargets : MonoBehaviour
     /// </summary>
     void Update()
     {
-
+        UpdateTargetScores();
     }
 
     /// <summary>
@@ -283,8 +318,13 @@ public class CreateTargets : MonoBehaviour
     private void CreateTargetObjects()
     {
         targetLayers.Clear();
+        scoredTargets.Clear();
         isLaunchStarted = false;
         isTargetPhysicsReleased = false;
+        if (DebugScoreDisplay.Instance != null)
+        {
+            DebugScoreDisplay.Instance.SetScore(0);
+        }
 
         foreach (Transform child in this.gameObject.transform)
         {
@@ -679,6 +719,96 @@ public class CreateTargets : MonoBehaviour
         }
 
         return target.IsInCameraView(mainCamera, targetStopViewportPadding);
+    }
+
+    /// <summary>
+    /// Adds score for targets that have left the playable field after impact.
+    /// 衝突後にプレイ可能なフィールド外へ出たターゲットのスコアを加算します。
+    /// </summary>
+    private void UpdateTargetScores()
+    {
+        if (!isTargetPhysicsReleased)
+        {
+            return;
+        }
+
+        foreach (Transform child in this.gameObject.transform)
+        {
+            var target = child.GetComponent<Target>();
+            if (target == null || scoredTargets.Contains(target))
+            {
+                continue;
+            }
+
+            if (!ShouldScoreTarget(target))
+            {
+                continue;
+            }
+
+            scoredTargets.Add(target);
+            if (DebugScoreDisplay.Instance != null)
+            {
+                DebugScoreDisplay.Instance.AddScore(target.ScoreValue);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns whether the target should add score because it left the field or screen.
+    /// ターゲットがフィールド外または画面外へ出たためスコア加算すべきかを返します。
+    /// </summary>
+    private bool ShouldScoreTarget(Target target)
+    {
+        return IsTargetOutOfScoreView(target)
+            || IsTargetOutsideScoreField(target)
+            || IsTargetFallenBelowScoreField(target);
+    }
+
+    /// <summary>
+    /// Returns whether the target is outside the camera view used for scoring.
+    /// ターゲットがスコア加算用のカメラ表示範囲外にあるかを返します。
+    /// </summary>
+    private bool IsTargetOutOfScoreView(Target target)
+    {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        return !target.IsInCameraView(mainCamera, targetScoreViewportPadding);
+    }
+
+    /// <summary>
+    /// Returns whether the target is clearly outside the field bounds on the X or Z axis.
+    /// ターゲットがX軸またはZ軸で明らかにフィールド範囲外にあるかを返します。
+    /// </summary>
+    private bool IsTargetOutsideScoreField(Target target)
+    {
+        if (scoreFieldCollider == null)
+        {
+            return false;
+        }
+
+        var fieldBounds = scoreFieldCollider.bounds;
+        var targetPosition = target.transform.position;
+        return targetPosition.x < fieldBounds.min.x - targetScoreFieldOutPadding
+            || targetPosition.x > fieldBounds.max.x + targetScoreFieldOutPadding
+            || targetPosition.z < fieldBounds.min.z - targetScoreFieldOutPadding
+            || targetPosition.z > fieldBounds.max.z + targetScoreFieldOutPadding;
+    }
+
+    /// <summary>
+    /// Returns whether the target has fallen below the field bounds.
+    /// ターゲットがフィールド範囲より下へ落下したかを返します。
+    /// </summary>
+    private bool IsTargetFallenBelowScoreField(Target target)
+    {
+        if (scoreFieldCollider == null)
+        {
+            return target.transform.position.y < targetStoppedYThreshold;
+        }
+
+        return target.transform.position.y < scoreFieldCollider.bounds.min.y - targetScoreFallenBelowFieldDistance;
     }
 
     /// <summary>

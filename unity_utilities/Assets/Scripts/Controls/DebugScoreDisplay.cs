@@ -52,4 +52,13 @@ public class DebugScoreDisplay : MonoBehaviour
 
         scoreText.text = $"{scorePrefix}{currentScore}";
     }
+
+    /// <summary>
+    /// Adds score points and updates the score text.
+    /// スコアを加算し、スコアテキストを更新します。
+    /// </summary>
+    public void AddScore(int score)
+    {
+        SetScore(currentScore + Mathf.Max(0, score));
+    }
 }

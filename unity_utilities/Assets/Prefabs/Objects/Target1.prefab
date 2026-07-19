@@ -155,6 +155,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Target
   rigidBody: {fileID: 4362341329123271359}
+  targetRenderer: {fileID: 0}
+  scoreValue: 100
 --- !u!114 &2457450730937633454
 MonoBehaviour:
   m_ObjectHideFlags: 0

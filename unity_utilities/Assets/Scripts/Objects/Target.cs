@@ -11,7 +11,12 @@ public class Target : MonoBehaviour
     [SerializeField]
     private Renderer targetRenderer;
 
+    [SerializeField]
+    private int scoreValue = 100;
+
     private RigidbodyConstraints defaultConstraints;
+
+    public int ScoreValue => scoreValue;
 
     /// <summary>
     /// Initializes the target rigidbody reference.
