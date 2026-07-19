@@ -94,7 +94,11 @@ public class Target : MonoBehaviour
             return;
         }
 
+        var currentConstraints = rigidBody.constraints;
+        rigidBody.constraints = defaultConstraints;
         rigidBody.position += worldDelta;
+        transform.position = rigidBody.position;
+        rigidBody.constraints = currentConstraints;
     }
 
     /// <summary>
