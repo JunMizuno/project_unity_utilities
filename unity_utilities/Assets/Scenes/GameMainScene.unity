@@ -348,6 +348,7 @@ GameObject:
   - component: {fileID: 413658286}
   - component: {fileID: 413658285}
   - component: {fileID: 413658284}
+  - component: {fileID: 413658287}
   m_Layer: 0
   m_Name: Plane
   m_TagString: Untagged
@@ -449,6 +450,21 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 413658282}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &413658287
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 413658282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82e51923a4b6487c8f1a9e5e1ff23335, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Field
+  movePattern: 8
+  moveDistance: 3.5
+  axisLoopSeconds: 4
 --- !u!1 &703839891
 GameObject:
   m_ObjectHideFlags: 0
