@@ -795,9 +795,7 @@ MonoBehaviour:
   targetStopStableSeconds: 0.5
   mainCamera: {fileID: 0}
   targetStopViewportPadding: 0.05
-  targetScoreViewportPadding: 0.1
   scoreFieldCollider: {fileID: 413658284}
-  targetScoreFieldOutPadding: 0.75
   targetScoreFallenBelowFieldDistance: 1
 --- !u!1 &1087914303
 GameObject:

@@ -154,22 +154,8 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     private float targetStopViewportPadding = 0.05f;
 
-    // Viewport padding used when deciding that a target has left the screen for scoring.
-    // Increase to score only after targets move farther offscreen. Decrease to score near the screen edge.
-    // スコア加算用にターゲットが画面外へ出たとみなす表示範囲の余白です。
-    // 上げるとより画面外へ離れてから加点し、下げると画面端付近で加点しやすくなります。
-    [SerializeField]
-    private float targetScoreViewportPadding = 0.1f;
-
     [SerializeField]
     private Collider scoreFieldCollider;
-
-    // Horizontal padding added to the field bounds used for scoring.
-    // Increase to wait until targets move farther outside the field. Decrease to score closer to the field edge.
-    // スコア加算用のフィールド範囲に追加する水平余白です。
-    // 上げるとフィールド外へより離れてから加点し、下げるとフィールド端付近で加点しやすくなります。
-    [SerializeField]
-    private float targetScoreFieldOutPadding = 0.75f;
 
     // Vertical distance below the field bounds used to score fallen targets.
     // Increase to require targets to fall farther below the field. Decrease to score fallen targets sooner.
@@ -722,8 +708,8 @@ public class CreateTargets : MonoBehaviour
     }
 
     /// <summary>
-    /// Adds score for targets that have left the playable field after impact.
-    /// 衝突後にプレイ可能なフィールド外へ出たターゲットのスコアを加算します。
+    /// Adds score for targets that have fallen below the playable field after impact.
+    /// 衝突後にプレイ可能なフィールドより下へ落ちたターゲットのスコアを加算します。
     /// </summary>
     private void UpdateTargetScores()
     {
@@ -754,47 +740,12 @@ public class CreateTargets : MonoBehaviour
     }
 
     /// <summary>
-    /// Returns whether the target should add score because it left the field or screen.
-    /// ターゲットがフィールド外または画面外へ出たためスコア加算すべきかを返します。
+    /// Returns whether the target should add score because it fell below the field.
+    /// ターゲットがフィールドより下へ落ちたためスコア加算すべきかを返します。
     /// </summary>
     private bool ShouldScoreTarget(Target target)
     {
-        return IsTargetOutOfScoreView(target)
-            || IsTargetOutsideScoreField(target)
-            || IsTargetFallenBelowScoreField(target);
-    }
-
-    /// <summary>
-    /// Returns whether the target is outside the camera view used for scoring.
-    /// ターゲットがスコア加算用のカメラ表示範囲外にあるかを返します。
-    /// </summary>
-    private bool IsTargetOutOfScoreView(Target target)
-    {
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-        }
-
-        return !target.IsInCameraView(mainCamera, targetScoreViewportPadding);
-    }
-
-    /// <summary>
-    /// Returns whether the target is clearly outside the field bounds on the X or Z axis.
-    /// ターゲットがX軸またはZ軸で明らかにフィールド範囲外にあるかを返します。
-    /// </summary>
-    private bool IsTargetOutsideScoreField(Target target)
-    {
-        if (scoreFieldCollider == null)
-        {
-            return false;
-        }
-
-        var fieldBounds = scoreFieldCollider.bounds;
-        var targetPosition = target.transform.position;
-        return targetPosition.x < fieldBounds.min.x - targetScoreFieldOutPadding
-            || targetPosition.x > fieldBounds.max.x + targetScoreFieldOutPadding
-            || targetPosition.z < fieldBounds.min.z - targetScoreFieldOutPadding
-            || targetPosition.z > fieldBounds.max.z + targetScoreFieldOutPadding;
+        return IsTargetFallenBelowScoreField(target);
     }
 
     /// <summary>
