@@ -579,6 +579,7 @@ MonoBehaviour:
   targetPrefab: {fileID: 3859646832928500369, guid: 1c34305d7d7068f4380048b167a3adb4, type: 3}
   layerFixIntervalSeconds: 0.2
   initialCreateDelaySeconds: 0.2
+  useVerticalOnlyPhysicsBeforeHit: 1
   minImpactExplosionForce: 4
   maxImpactExplosionForce: 8
   impactExplosionRadius: 3

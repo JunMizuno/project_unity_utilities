@@ -32,6 +32,13 @@ public class CreateTargets : MonoBehaviour
     [SerializeField]
     private float initialCreateDelaySeconds = 0.05f;
 
+    // Keeps generated targets affected only by vertical physics until the first ball hit.
+    // Turn on to let blocks settle downward without collapsing sideways before impact.
+    // 初回のボール衝突まで、生成済みターゲットを縦方向だけ物理影響を受ける状態にします。
+    // オンにすると、衝突前に横崩れしにくいまま下方向へ着地させられます。
+    [SerializeField]
+    private bool useVerticalOnlyPhysicsBeforeHit = true;
+
     // Minimum additional force applied when the ball hits targets with weak launch power.
     // Increase to make even weak shots scatter blocks more. Decrease to keep weak shots calmer.
     // 弱い発射威力でターゲットに当たったときに加える追加の最小衝撃力です。
@@ -166,7 +173,14 @@ public class CreateTargets : MonoBehaviour
                 isLaunchStarted = true;
                 if (!isTargetPhysicsReleased)
                 {
-                    SetTargetPhysicsEnabled(false);
+                    if (useVerticalOnlyPhysicsBeforeHit)
+                    {
+                        SetTargetVerticalPhysicsOnly();
+                    }
+                    else
+                    {
+                        SetTargetPhysicsEnabled(false);
+                    }
                 }
             })
             .AddTo(this);
@@ -288,7 +302,15 @@ public class CreateTargets : MonoBehaviour
                 return;
             }
 
-            SetLayerPhysicsEnabled(layer, true);
+            if (useVerticalOnlyPhysicsBeforeHit)
+            {
+                SetLayerVerticalPhysicsOnly(layer);
+            }
+            else
+            {
+                SetLayerPhysicsEnabled(layer, true);
+            }
+
             await WaitForLayerSettledAsync(layer, cancellationToken);
 
             if (isLaunchStarted || cancellationToken.IsCancellationRequested)
@@ -296,7 +318,15 @@ public class CreateTargets : MonoBehaviour
                 return;
             }
 
-            SetLayerPhysicsEnabled(layer, false);
+            if (useVerticalOnlyPhysicsBeforeHit)
+            {
+                SetLayerVerticalPhysicsOnly(layer);
+            }
+            else
+            {
+                SetLayerPhysicsEnabled(layer, false);
+            }
+
             TargetPlacementLayerFixedSubject.OnNext(new TargetPlacementLayerState(this, layerIndex, layerIndex + 1));
         }
 
@@ -340,6 +370,21 @@ public class CreateTargets : MonoBehaviour
     }
 
     /// <summary>
+    /// Sets a generated target layer to vertical-only physics.
+    /// 生成済みターゲットのレイヤーを縦方向だけ物理演算で動ける状態にします。
+    /// </summary>
+    private void SetLayerVerticalPhysicsOnly(List<Target> layer)
+    {
+        foreach (var target in layer)
+        {
+            if (target != null)
+            {
+                target.SetVerticalPhysicsOnly();
+            }
+        }
+    }
+
+    /// <summary>
     /// Sets whether all generated targets are controlled by physics.
     /// 生成済みのすべてのターゲットを物理演算で制御するかどうかを設定します。
     /// </summary>
@@ -351,6 +396,22 @@ public class CreateTargets : MonoBehaviour
             if (target != null)
             {
                 target.SetPhysicsEnabled(enabled);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sets all generated targets to vertical-only physics.
+    /// 生成済みのすべてのターゲットを縦方向だけ物理演算で動ける状態にします。
+    /// </summary>
+    private void SetTargetVerticalPhysicsOnly()
+    {
+        foreach (Transform child in this.gameObject.transform)
+        {
+            var target = child.GetComponent<Target>();
+            if (target != null)
+            {
+                target.SetVerticalPhysicsOnly();
             }
         }
     }

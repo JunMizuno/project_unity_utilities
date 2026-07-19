@@ -11,6 +11,8 @@ public class Target : MonoBehaviour
     [SerializeField]
     private Renderer targetRenderer;
 
+    private RigidbodyConstraints defaultConstraints;
+
     /// <summary>
     /// Initializes the target rigidbody reference.
     /// ターゲットのコンポーネント参照を初期化します。
@@ -26,6 +28,11 @@ public class Target : MonoBehaviour
         {
             targetRenderer = GetComponentInChildren<Renderer>();
         }
+
+        if (rigidBody != null)
+        {
+            defaultConstraints = rigidBody.constraints;
+        }
     }
 
     /// <summary>
@@ -39,6 +46,7 @@ public class Target : MonoBehaviour
             return;
         }
 
+        rigidBody.constraints = defaultConstraints;
         rigidBody.isKinematic = !enabled;
         if (enabled)
         {
@@ -52,6 +60,26 @@ public class Target : MonoBehaviour
         }
 
         PhysicsStateChangedSubject.OnNext(new TargetPhysicsState(this, rigidBody, enabled));
+    }
+
+    /// <summary>
+    /// Enables only vertical physics movement while locking sideways movement and rotation.
+    /// 横移動と回転を固定し、縦方向だけ物理演算で動ける状態にします。
+    /// </summary>
+    public void SetVerticalPhysicsOnly()
+    {
+        if (rigidBody == null)
+        {
+            return;
+        }
+
+        rigidBody.isKinematic = false;
+        rigidBody.constraints = RigidbodyConstraints.FreezePositionX
+            | RigidbodyConstraints.FreezePositionZ
+            | RigidbodyConstraints.FreezeRotation;
+        rigidBody.linearVelocity = new Vector3(0.0f, rigidBody.linearVelocity.y, 0.0f);
+        rigidBody.angularVelocity = Vector3.zero;
+        rigidBody.WakeUp();
     }
 
     /// <summary>
