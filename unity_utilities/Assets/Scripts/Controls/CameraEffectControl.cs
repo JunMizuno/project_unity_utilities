@@ -19,21 +19,21 @@ public class CameraEffectControl : MonoBehaviour
     // 少数のオブジェクトだけが動いているときの揺れ幅です。
     // 上げると小さな衝突でも目立ち、下げると控えめになります。
     [SerializeField]
-    private float weakShakeAmplitude = 0.125f;
+    private float weakShakeAmplitude = 0.2f;
 
     // Shake amplitude used for the default impact response.
     // Increase to make normal impacts stronger. Decrease to reduce ordinary shake.
     // 通常の衝突反応に使う揺れ幅です。
     // 上げると通常衝突の揺れが強くなり、下げると控えめになります。
     [SerializeField]
-    private float normalShakeAmplitude = 0.3f;
+    private float normalShakeAmplitude = 0.45f;
 
     // Shake amplitude used when many objects are moving.
     // Increase to emphasize heavy impacts. Decrease to reduce strong-impact shake.
     // 多数のオブジェクトが動いているときの揺れ幅です。
     // 上げると大きな衝突をより強調し、下げると強衝突の揺れを抑えます。
     [SerializeField]
-    private float strongShakeAmplitude = 0.65f;
+    private float strongShakeAmplitude = 1.0f;
 
     // Maximum moving object count that still uses weak shake.
     // Increase to classify more impacts as weak. Decrease to move impacts into normal shake sooner.
