@@ -463,7 +463,8 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Field
   movePattern: 8
-  moveDistance: 3.5
+  horizontalMoveDistance: 6
+  verticalMoveDistance: 3
   axisLoopSeconds: 4
   isMovementEnabled: 0
 --- !u!1 &703839891

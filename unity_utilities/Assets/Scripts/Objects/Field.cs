@@ -21,12 +21,19 @@ public class Field : MonoBehaviour
     [SerializeField]
     private FieldMovePattern movePattern = FieldMovePattern.SequentialAxes;
 
-    // Maximum movement distance from the initial local position on each active axis.
-    // Increase to move the field farther. Decrease to keep the field movement subtle.
-    // 有効な各軸で初期ローカル座標から移動する最大距離です。
-    // 上げるとフィールドの移動幅が大きくなり、下げると控えめになります。
+    // Maximum movement distance from the initial local position on the X and Z axes.
+    // Increase to move the field farther forward/back or left/right. Decrease to keep horizontal movement subtle.
+    // X軸とZ軸で初期ローカル座標から移動する最大距離です。
+    // 上げると前後左右の移動幅が大きくなり、下げると水平移動が控えめになります。
     [SerializeField]
-    private float moveDistance = 3.5f;
+    private float horizontalMoveDistance = 6.0f;
+
+    // Maximum movement distance from the initial local position on the Y axis.
+    // Increase to move the field higher/lower. Decrease to keep vertical movement subtle.
+    // Y軸で初期ローカル座標から移動する最大距離です。
+    // 上げると上下の移動幅が大きくなり、下げると垂直移動が控えめになります。
+    [SerializeField]
+    private float verticalMoveDistance = 3.0f;
 
     // Seconds used to move from zero to one side, back to zero, to the other side, and back again.
     // Increase to make each movement slower. Decrease to make it faster.
@@ -87,7 +94,26 @@ public class Field : MonoBehaviour
     /// </summary>
     public void SetMoveDistance(float distance)
     {
-        moveDistance = Mathf.Max(0.0f, distance);
+        SetHorizontalMoveDistance(distance);
+        SetVerticalMoveDistance(distance);
+    }
+
+    /// <summary>
+    /// Sets the maximum horizontal movement distance from the initial local position.
+    /// 初期ローカル座標からの水平最大移動距離を設定します。
+    /// </summary>
+    public void SetHorizontalMoveDistance(float distance)
+    {
+        horizontalMoveDistance = Mathf.Max(0.0f, distance);
+    }
+
+    /// <summary>
+    /// Sets the maximum vertical movement distance from the initial local position.
+    /// 初期ローカル座標からの垂直最大移動距離を設定します。
+    /// </summary>
+    public void SetVerticalMoveDistance(float distance)
+    {
+        verticalMoveDistance = Mathf.Max(0.0f, distance);
     }
 
     /// <summary>
@@ -163,19 +189,19 @@ public class Field : MonoBehaviour
         switch (movePattern)
         {
             case FieldMovePattern.ForwardBack:
-                return new Vector3(0.0f, 0.0f, CalculateLoopOffset(elapsedSeconds));
+                return new Vector3(0.0f, 0.0f, CalculateLoopOffset(elapsedSeconds, horizontalMoveDistance));
             case FieldMovePattern.LeftRight:
-                return new Vector3(CalculateLoopOffset(elapsedSeconds), 0.0f, 0.0f);
+                return new Vector3(CalculateLoopOffset(elapsedSeconds, horizontalMoveDistance), 0.0f, 0.0f);
             case FieldMovePattern.UpDown:
-                return new Vector3(0.0f, CalculateLoopOffset(elapsedSeconds), 0.0f);
+                return new Vector3(0.0f, CalculateLoopOffset(elapsedSeconds, verticalMoveDistance), 0.0f);
             case FieldMovePattern.ForwardBackLeftRight:
-                return new Vector3(CalculateLoopOffset(elapsedSeconds), 0.0f, CalculateLoopOffset(elapsedSeconds));
+                return new Vector3(CalculateLoopOffset(elapsedSeconds, horizontalMoveDistance), 0.0f, CalculateLoopOffset(elapsedSeconds, horizontalMoveDistance));
             case FieldMovePattern.ForwardBackUpDown:
-                return new Vector3(0.0f, CalculateLoopOffset(elapsedSeconds), CalculateLoopOffset(elapsedSeconds));
+                return new Vector3(0.0f, CalculateLoopOffset(elapsedSeconds, verticalMoveDistance), CalculateLoopOffset(elapsedSeconds, horizontalMoveDistance));
             case FieldMovePattern.LeftRightUpDown:
-                return new Vector3(CalculateLoopOffset(elapsedSeconds), CalculateLoopOffset(elapsedSeconds), 0.0f);
+                return new Vector3(CalculateLoopOffset(elapsedSeconds, horizontalMoveDistance), CalculateLoopOffset(elapsedSeconds, verticalMoveDistance), 0.0f);
             case FieldMovePattern.AllAxes:
-                return new Vector3(CalculateLoopOffset(elapsedSeconds), CalculateLoopOffset(elapsedSeconds), CalculateLoopOffset(elapsedSeconds));
+                return new Vector3(CalculateLoopOffset(elapsedSeconds, horizontalMoveDistance), CalculateLoopOffset(elapsedSeconds, verticalMoveDistance), CalculateLoopOffset(elapsedSeconds, horizontalMoveDistance));
             case FieldMovePattern.SequentialAxes:
                 return CalculateSequentialMoveOffset();
             default:
@@ -194,16 +220,15 @@ public class Field : MonoBehaviour
         var sequenceTime = Mathf.Repeat(elapsedSeconds, totalSeconds);
         var axisIndex = Mathf.FloorToInt(sequenceTime / safeLoopSeconds);
         var axisTime = sequenceTime - safeLoopSeconds * axisIndex;
-        var offset = CalculateLoopOffset(axisTime);
 
         switch (axisIndex)
         {
             case 0:
-                return new Vector3(0.0f, 0.0f, offset);
+                return new Vector3(0.0f, 0.0f, CalculateLoopOffset(axisTime, horizontalMoveDistance));
             case 1:
-                return new Vector3(offset, 0.0f, 0.0f);
+                return new Vector3(CalculateLoopOffset(axisTime, horizontalMoveDistance), 0.0f, 0.0f);
             default:
-                return new Vector3(0.0f, offset, 0.0f);
+                return new Vector3(0.0f, CalculateLoopOffset(axisTime, verticalMoveDistance), 0.0f);
         }
     }
 
@@ -211,26 +236,26 @@ public class Field : MonoBehaviour
     /// Calculates eased movement from zero to negative, zero, positive, and back to zero.
     /// ゼロからマイナス、ゼロ、プラス、ゼロへ戻るイージング移動を計算します。
     /// </summary>
-    private float CalculateLoopOffset(float time)
+    private float CalculateLoopOffset(float time, float distance)
     {
         var safeLoopSeconds = Mathf.Max(axisLoopSeconds, 0.01f);
         var loopRate = Mathf.Repeat(time / safeLoopSeconds, 1.0f);
         if (loopRate < 0.25f)
         {
-            return Mathf.Lerp(0.0f, -moveDistance, SmoothStep(loopRate / 0.25f));
+            return Mathf.Lerp(0.0f, -distance, SmoothStep(loopRate / 0.25f));
         }
 
         if (loopRate < 0.5f)
         {
-            return Mathf.Lerp(-moveDistance, 0.0f, SmoothStep((loopRate - 0.25f) / 0.25f));
+            return Mathf.Lerp(-distance, 0.0f, SmoothStep((loopRate - 0.25f) / 0.25f));
         }
 
         if (loopRate < 0.75f)
         {
-            return Mathf.Lerp(0.0f, moveDistance, SmoothStep((loopRate - 0.5f) / 0.25f));
+            return Mathf.Lerp(0.0f, distance, SmoothStep((loopRate - 0.5f) / 0.25f));
         }
 
-        return Mathf.Lerp(moveDistance, 0.0f, SmoothStep((loopRate - 0.75f) / 0.25f));
+        return Mathf.Lerp(distance, 0.0f, SmoothStep((loopRate - 0.75f) / 0.25f));
     }
 
     /// <summary>
